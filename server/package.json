@@ -1,0 +1,44 @@
+{
+  "name": "auth-lagao-backend",
+  "version": "1.0.0",
+  "description": "A saas tool that provide licensing system for desktop apps cli tools etc.",
+  "homepage": "https://github.com/rafidahmed870/auth-lagao-saas#readme",
+  "bugs": {
+    "url": "https://github.com/rafidahmed870/auth-lagao-saas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rafidahmed870/auth-lagao-saas.git"
+  },
+  "license": "MIT",
+  "author": "Rafid Ahmed",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.22.0",
+    "redis": "^6.1.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.1",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "nodemon": "^3.1.14"
+  }
+}
