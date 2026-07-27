@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { db } = require("../DB/database");
 const { sessions } = require("../DB/schema");
-const { and, gte } = require("drizzle-orm");
+const { and, gte, eq } = require("drizzle-orm");
 
 const APP_SECRET = process.env.APP_SECRET ?? null;
 if (!APP_SECRET) {
@@ -65,16 +65,17 @@ exports.generateToken = async (id, tokenVersion, res) => {
 exports.verifyRefreshToken = async (refreshToken) => {
   try {
     const decoded = jwt.verify(refreshToken, APP_SECRET);
-    if (!decoded || decoded.id || decoded.tokenVersion || decoded.sessionId) {
+    if (!decoded || !decoded.id || !decoded.tokenVersion || !decoded.sessionId) {
       return null;
     }
 
     const validSession = await db
-      .select(sessions)
+      .select()
+      .from(sessions)
       .where(
         and(
-          eq(sessionId, decoded.sessionId),
-          eq(userId, decoded.id),
+          eq(sessions.sessionId, decoded.sessionId),
+          eq(sessions.userId, decoded.id),
           gte(sessions.expiresAt, new Date()),
         ),
       );

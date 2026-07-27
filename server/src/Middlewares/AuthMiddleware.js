@@ -3,7 +3,7 @@ const TryCatch = require("./TryCatch");
 const jwt = require("jsonwebtoken");
 
 exports.AuthMiddleware = TryCatch(async (req, res, next) => {
-  const token = req.headers?.accessToken;
+  const token = req.cookies?.accessToken;
   if (!token) {
     return res.status(401).json({
       success: false,

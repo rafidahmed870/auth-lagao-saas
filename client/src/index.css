@@ -96,3 +96,48 @@
     @apply font-sans;
   }
 }
+
+.custom-toast {
+  min-height: unset !important;
+  padding: 10px !important;
+  border-left: 4px solid #22c55e;
+  font-family: var(--font-dosis);
+
+  /* bg/80 + backdrop-blur-md */
+  background: var(--color-background) / 0.8 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.Toastify__toast-body {
+  font-family: var(--font-dosis) !important;
+}
+
+.Toastify__toast,
+.Toastify__toast-body {
+  font-family: inherit !important;
+  font-size: 12px !important;
+}
+
+
+/* width */
+::-webkit-scrollbar {
+  width: 4px;   
+  height: 4px; 
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}

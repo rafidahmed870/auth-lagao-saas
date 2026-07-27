@@ -7,11 +7,11 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 
-router.post('/refresh/token', refreshToken);
-router.post('/refresh/csrf', refreshCSRF);
+router.post('/refresh/token', AuthMiddleware, refreshToken);
+router.post('/refresh/csrf', AuthMiddleware, refreshCSRF);
 
-router.post('/logout', verifyCSRFToken, logout);
+router.post('/logout', AuthMiddleware, verifyCSRFToken, logout);
 
-router.get('/acount', AuthMiddleware, getMe);
+router.get('/account', AuthMiddleware, getMe);
 
 module.exports = router;

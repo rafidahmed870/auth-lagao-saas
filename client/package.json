@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "auth-lagao-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,6 +15,7 @@
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
+    "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
@@ -23,6 +24,7 @@
     "react-dom": "^19.2.7",
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.1",
+    "react-toastify": "^11.1.0",
     "shadcn": "^4.15.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
