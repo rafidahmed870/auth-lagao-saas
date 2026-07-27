@@ -15,6 +15,7 @@ function App() {
         <HelmetProvider>
           <TooltipProvider>
             <Routes>
+              {/* PUBLIC ROUTES */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
