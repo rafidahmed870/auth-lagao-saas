@@ -1,9 +1,12 @@
 import React from "react";
 import { ArrowRight, Play, Check, Shield, Code2, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { Button } from "../ui/button";
 
 function HeroSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <section
@@ -47,17 +50,31 @@ function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex items-center gap-2 px-8 py-4 cursor-pointer rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-lg shadow-blue-500/25"
+              {user ? (
+                <Button
+                  onClick={() => navigate("/dashboard/overview")}
+                  className="inline-flex items-center gap-2 px-8 py-4 h-12 cursor-pointer rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-lg shadow-blue-500/25"
+                >
+                  Dashboard
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex items-center gap-2 px-8 py-4 h-12 cursor-pointer rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-lg shadow-blue-500/25"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                className="inline-flex items-center gap-2 px-8 py-4 h-12 cursor-pointer rounded-xl border border-border font-semibold transition-all duration-300"
               >
-                Get Started
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              <button className="inline-flex items-center gap-2 px-8 py-4 cursor-pointer rounded-xl border border-border bg-background/50 text-foreground font-semibold hover:bg-accent transition-all duration-300">
                 <Play className="w-5 h-5" />
-                Watch Demo
-              </button>
+                Documentation
+              </Button>
             </div>
 
             {/* Trust indicators */}

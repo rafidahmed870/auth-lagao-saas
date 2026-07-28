@@ -56,13 +56,13 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
           {/* Brand Column */}
           <div className="md:col-span-4 flex flex-col gap-4">
-            <Link to="/" className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2">
               <img
                 src="/auth-lagao-web.png"
                 alt="Auth Lagao"
                 className="h-10 object-cover"
               />
-            </Link>
+            </a>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
               Secure your SaaS applications in seconds. We provide robust,
               easy-to-integrate authentication and user management APIs.
@@ -102,7 +102,7 @@ function Footer() {
             <ul className="flex flex-col gap-2.5 text-sm">
               <li>
                 <a
-                  href="#features"
+                  href="/#features"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Features
@@ -110,7 +110,7 @@ function Footer() {
               </li>
               <li>
                 <a
-                  href="#pricing"
+                  href="/#pricing"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Pricing
@@ -118,7 +118,7 @@ function Footer() {
               </li>
               <li>
                 <a
-                  href="#faqs"
+                  href="/#faqs"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   FAQs

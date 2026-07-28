@@ -115,6 +115,23 @@ exports.refreshToken = TryCatch(async (req, res) => {
     });
   }
 
+  const user = await findUserById(decoded.id);
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "User Not Found!",
+    });
+  }
+
+  // Token Rotation || Token Version
+  if (decoded.tokenVersion !== user.tokenVersion) {
+    await revokeRefreshToken(user.id, decoded.sessionId);
+    return res.status(401).json({
+      success: false,
+      message: "Improper token has been passed!",
+    });
+  }
+
   await generateAccessToken(
     decoded.id,
     decoded.sessionId,

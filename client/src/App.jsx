@@ -7,6 +7,12 @@ import Login from "@/pages/authentication/Login";
 import { ToastContainer } from "react-toastify";
 import Register from "@/pages/authentication/Register";
 import { AuthProvider } from "@/context/AuthContext";
+import Overview from "@/pages/dashboard/overview/Overview";
+import NotFound from "@/pages/NotFound";
+import Licenses from "@/pages/dashboard/licenses/Licenses";
+import Users from "@/pages/dashboard/users/Users";
+import Subscription from "@/pages/dashboard/subscriptions/Subscription";
+import Team from "@/pages/dashboard/team/Team";
 
 function App() {
   return (
@@ -19,6 +25,16 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+
+              {/* PROTECTED ROUTES */}
+              <Route path="/dashboard/overview" element={<Overview />} />
+              <Route path="/dashboard/licenses" element={<Licenses />} />
+              <Route path="/dashboard/users" element={<Users />} />
+              <Route path="/dashboard/subscriptions" element={<Subscription />} />
+              <Route path="/dashboard/team" element={<Team />} />
+
+              {/* 404 Not Found Route */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
             <ToastContainer
               position="top-right"

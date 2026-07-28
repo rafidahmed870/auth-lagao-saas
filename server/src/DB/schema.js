@@ -10,6 +10,7 @@ const {
   varchar,
   timestamp,
   text,
+  boolean,
 } = require("drizzle-orm/pg-core");
 
 /* PLATFORM USERS ROLE BASED PERMISSION TABLE */
@@ -64,6 +65,28 @@ const sessions = pgTable("sessions", {
     .$onUpdate(() => new Date())
     .notNull(),
   expiresAt: timestamp("expires_at").notNull(),
+});
+
+/* CLIENTS APPLICATION */
+const applications = pgTable("applications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  appName: varchar("app_name", { length: 255 }).notNull(),
+  appDescription: text("app_description"),
+  appVersion: varchar("app_version", { length: 50 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+
+  appKey: text("app_key").notNull(), // Public key that will provided
+  encryptedPrivateKey: text("encrypted_private_key").notNull(), // base64
+  privateKeyIv: text("private_key_iv").notNull(), // base64
+  privateKeyAuthTag: text("private_key_auth_tag").notNull(), // base64
+  keyVersion: integer("key_version").notNull().default(1),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 module.exports = {

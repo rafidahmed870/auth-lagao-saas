@@ -8,9 +8,26 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function Header() {
   const [open, setOpen] = useState(false);
+  const { user, logout, loading } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handleLogoutBtn = async () => {
+    const response = await logout();
+    if (response.success) {
+      toast.success(response.message);
+      navigate("/login");
+    } else {
+      toast.error(response.message);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -18,31 +35,31 @@ function Header() {
         <div className="max-w-7xl mx-auto flex items-center px-4">
           {/* Logo */}
           <div className="p-2">
-            <Link to="/">
+            <a href="/#hero">
               <img
                 src="/auth-lagao-web.png"
                 className="w-full h-12 object-cover"
               />
-            </Link>
+            </a>
           </div>
 
           <div className="hidden md:flex flex-1 justify-center">
             <nav className="flex items-center gap-8 font-dosis font-light">
               <a
-                href="#hero"
+                href="/#hero"
                 className="relative text-gray-100 hover:text-primary transition-colors duration-300 after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
               >
                 Home
               </a>
               <a
-                href="#features"
+                href="/#features"
                 className="relative text-gray-100 hover:text-primary transition-colors duration-300 after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
               >
                 Features
               </a>
 
               <a
-                href="#pricing"
+                href="/#pricing"
                 className="relative text-gray-100 hover:text-primary transition-colors duration-300 after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full"
               >
                 Pricing
@@ -74,20 +91,42 @@ function Header() {
           </div>
 
           <div className="ml-auto flex items-center gap-6">
-            <Link
-              to="/login"
-              className="text-xs font-medium hover:text-primary hidden md:block"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 hidden md:block"
-            >
-              <span className="flex flex-row items-center">
-                Register <ArrowRight className="ml-2 w-3 h-3" />
-              </span>
-            </Link>
+            {!user ? (
+              <>
+                <Link
+                  to="/login"
+                  className="text-xs font-medium hover:text-primary hidden md:block"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 hidden md:block"
+                >
+                  <span className="flex flex-row items-center">
+                    Register <ArrowRight className="ml-2 w-3 h-3" />
+                  </span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Button
+                  disabled={loading}
+                  onClick={() => navigate("/dashboard/overview")}
+                  className="hidden md:block cursor-pointer font-dosis"
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  disabled={loading}
+                  onClick={handleLogoutBtn}
+                  variant="outline"
+                  className="hidden md:block cursor-pointer font-dosis"
+                >
+                  Logout
+                </Button>
+              </>
+            )}
 
             {/* Mobile Hamburger Menu with Sheet */}
             <div className="md:hidden">
@@ -155,21 +194,41 @@ function Header() {
                       Faqs
                     </a>
                     <div className="h-px bg-border/40" />
-                    <Link
-                      to="/login"
-                      onClick={() => setOpen(false)}
-                      className="text-lg text-center font-medium text-gray-200 hover:text-primary transition-colors pb-1"
-                    >
-                      Login
-                    </Link>
+                    {!user ? (
+                      <Link
+                        to="/login"
+                        onClick={() => setOpen(false)}
+                        className="text-lg text-center font-medium text-gray-200 hover:text-primary transition-colors pb-1"
+                      >
+                        Login
+                      </Link>
+                    ) : (
+                      <Button
+                        onClick={() => navigate("/dashboard/overview")}
+                        className="text-lg text-center font-medium text-gray-200 hover:text-primary transition-colors pb-1"
+                      >
+                        Dashboard
+                      </Button>
+                    )}
                     <div className="h-px bg-border/40" />
-                    <Link
-                      to="/register"
-                      onClick={() => setOpen(false)}
-                      className="text-lg font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 text-center"
-                    >
-                      Register
-                    </Link>
+                    {!user ? (
+                      <Link
+                        to="/register"
+                        onClick={() => setOpen(false)}
+                        className="text-lg font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 text-center"
+                      >
+                        Register
+                      </Link>
+                    ) : (
+                      <Button
+                        disabled={loading}
+                        onClick={handleLogoutBtn}
+                        variant="outline"
+                        className="text-lg text-center font-medium text-gray-200 hover:text-primary transition-colors pb-1"
+                      >
+                        Logout
+                      </Button>
+                    )}
                   </nav>
                 </SheetContent>
               </Sheet>
