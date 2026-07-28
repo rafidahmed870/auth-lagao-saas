@@ -1,28 +1,27 @@
-import React from 'react'
-import csLogo from '@/assets/csharp-logo.png'
-import cppLogo from '@/assets/cpp-logo.png'
-import jsLogo from '@/assets/js-logo.png'
-import tsLogo from '@/assets/ts-logo.png'
-import reactLogo from '@/assets/react-logo.png'
-import vueLogo from '@/assets/vue-logo.png'
-import pythonLogo from '@/assets/python-logo.png'
-import phpLogo from '@/assets/php-logo.png'
-import javaLogo from '@/assets/java-logo.png'
-
+import React from "react";
+import csLogo from "@/assets/csharp-logo.png";
+import cppLogo from "@/assets/cpp-logo.png";
+import jsLogo from "@/assets/js-logo.png";
+import tsLogo from "@/assets/ts-logo.png";
+import reactLogo from "@/assets/react-logo.png";
+import vueLogo from "@/assets/vue-logo.png";
+import pythonLogo from "@/assets/python-logo.png";
+import phpLogo from "@/assets/php-logo.png";
+import javaLogo from "@/assets/java-logo.png";
 
 const logos = [
-  { src: csLogo, alt: 'C#' },
-  { src: cppLogo, alt: 'C++' },
-  { src: jsLogo, alt: 'JavaScript' },
-  { src: tsLogo, alt: 'TypeScript' },
-  { src: reactLogo, alt: 'React' },
-  { src: vueLogo, alt: 'Vue' },
-  { src: pythonLogo, alt: 'Python' },
-  { src: phpLogo, alt: 'PHP' },
-  { src: javaLogo, alt: 'Java' },
-]
+  { src: csLogo, alt: "C#" },
+  { src: cppLogo, alt: "C++" },
+  { src: jsLogo, alt: "JavaScript" },
+  { src: tsLogo, alt: "TypeScript" },
+  { src: reactLogo, alt: "React" },
+  { src: vueLogo, alt: "Vue" },
+  { src: pythonLogo, alt: "Python" },
+  { src: phpLogo, alt: "PHP" },
+  { src: javaLogo, alt: "Java" },
+];
 
-const doubled = [...logos, ...logos]
+const doubled = [...logos, ...logos];
 
 function IntegrationTestimonial() {
   return (
@@ -45,7 +44,7 @@ function IntegrationTestimonial() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default IntegrationTestimonial
+export default IntegrationTestimonial;

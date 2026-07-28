@@ -1,63 +1,65 @@
-import React from 'react'
-import { Check, ArrowRight, Sparkles } from 'lucide-react'
+import React from "react";
+import { Check, ArrowRight, Sparkles } from "lucide-react";
 
 const plans = [
   {
-    name: 'Free',
-    price: '৳0',
-    period: '/ forever',
-    description: 'Everything you need to test the waters.',
+    name: "Free",
+    price: "৳0",
+    period: "/ forever",
+    description: "Everything you need to test the waters.",
     features: [
-      '1 Application',
-      '10 Users per App',
-      'Hardware ID Locking',
-      'All Auth Methods',
-      'Community support',
+      "1 Application",
+      "10 Users per App",
+      "Hardware ID Locking",
+      "All Auth Methods",
+      "Community support",
     ],
-    cta: 'Start Free',
-    href: '/register',
+    cta: "Start Free",
+    href: "/register",
     popular: false,
-    
   },
   {
-    name: 'Developer',
-    price: '৳50',
-    oldPrice: '৳100',
-    period: '/ per month',
-    description: 'For growing software that needs more headroom.',
+    name: "Developer",
+    price: "৳50",
+    oldPrice: "৳100",
+    period: "/ per month",
+    description: "For growing software that needs more headroom.",
     features: [
-      'Unlimited Applications',
-      '10,000+ Users Per App',
-      'Team Management',
-      'Function Management',
-      'Priority email support',
+      "Unlimited Applications",
+      "10,000+ Users Per App",
+      "Team Management",
+      "Function Management",
+      "Priority email support",
     ],
-    cta: 'Buy Now',
-    href: '/buy/developer',
+    cta: "Buy Now",
+    href: "/buy/developer",
     popular: true,
   },
   {
-    name: 'Seller',
-    price: '৳100',
-    oldPrice: '৳200',
-    period: '/ per month',
-    description: 'Scale with unlimited users and team features.',
+    name: "Seller",
+    price: "৳100",
+    oldPrice: "৳200",
+    period: "/ per month",
+    description: "Scale with unlimited users and team features.",
     features: [
-      'All In Developer +',
-      'Audit & Webhooks',
-      'Discord Bot',
-      'Telegram Bot',
-      'Seller API',
+      "All In Developer +",
+      "Audit & Webhooks",
+      "Discord Bot",
+      "Telegram Bot",
+      "Seller API",
     ],
-    cta: 'Buy Now',
-    href: '/buy/seller',
+    cta: "Buy Now",
+    href: "/buy/seller",
     popular: false,
   },
-]
+];
 
 function Pricing() {
   return (
-    <section id="pricing" className="relative py-28 overflow-hidden border-b border-border">
+    <section
+      id="pricing"
+      className="relative py-28 overflow-hidden border-b border-border"
+    >
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-blue-600/10 rounded-full blur-[150px]" />
@@ -66,9 +68,9 @@ function Pricing() {
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
-          <p className="text-sm font-semibold text-blue-400 uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
             Pricing
-          </p>
+          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-space-grotesk font-bold leading-tight max-w-2xl mx-auto mb-6">
             Perfect plans for your needs.
           </h2>
@@ -84,8 +86,8 @@ function Pricing() {
               key={i}
               className={`relative rounded-2xl border p-8 flex flex-col ${
                 plan.popular
-                  ? 'border-blue-500/40 bg-card/80 shadow-lg shadow-blue-500/10 scale-[1.03]'
-                  : 'border-border bg-card/50'
+                  ? "border-blue-500/40 bg-card/80 shadow-lg shadow-blue-500/10 scale-[1.03]"
+                  : "border-border bg-card/50"
               }`}
             >
               {/* Popular badge */}
@@ -136,8 +138,8 @@ function Pricing() {
                 href={plan.href}
                 className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
                   plan.popular
-                    ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/25'
-                    : 'border border-border bg-background/50 text-foreground hover:bg-accent'
+                    ? "bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/25"
+                    : "border border-border bg-background/50 text-foreground hover:bg-accent"
                 }`}
               >
                 {plan.cta}
@@ -148,7 +150,7 @@ function Pricing() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default Pricing
+export default Pricing;

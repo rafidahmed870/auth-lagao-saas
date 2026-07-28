@@ -1,13 +1,15 @@
-import React from 'react'
-import { ArrowRight, Play, Check, Shield, Code2, Sparkles } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-
+import React from "react";
+import { ArrowRight, Play, Check, Shield, Code2, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden border-b border-border">
+    <section
+      id="hero"
+      className="relative min-h-screen flex items-center overflow-hidden border-b border-border"
+    >
       {/* Background gradient glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/30 rounded-full blur-[128px]" />
@@ -22,12 +24,14 @@ function HeroSection() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
               <Shield className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-blue-400 font-medium">Open Source Auth For Licensing</span>
+              <span className="text-sm text-blue-400 font-medium">
+                Open Source Auth For Licensing
+              </span>
             </div>
 
             {/* Heading */}
             <h1 className="text-5xl lg:text-7xl font-space-grotesk font-bold leading-tight">
-              Best Free Auth for{' '}
+              Best Free Auth for{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-300 to-blue-500">
                 Developers.
               </span>
@@ -37,13 +41,16 @@ function HeroSection() {
             <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
               Ship sign-up in minutes, not weeks. The definitive zero-cost
               alternative to legacy systems. Cryptographic HWID locking,
-              instantaneous deployment, and a comprehensive reseller
-              management infrastructure — free forever.
+              instantaneous deployment, and a comprehensive reseller management
+              infrastructure — free forever.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
-              <button onClick={()=> navigate('/register')} className="inline-flex items-center gap-2 px-8 py-4 cursor-pointer rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-lg shadow-blue-500/25">
+              <button
+                onClick={() => navigate("/register")}
+                className="inline-flex items-center gap-2 px-8 py-4 cursor-pointer rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-lg shadow-blue-500/25"
+              >
                 Get Started
                 <ArrowRight className="w-5 h-5" />
               </button>
@@ -78,9 +85,13 @@ function HeroSection() {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20">
                     <Code2 className="w-3 h-3 text-blue-400" />
-                    <span className="text-xs text-blue-400 font-medium">HTTP-only</span>
+                    <span className="text-xs text-blue-400 font-medium">
+                      HTTP-only
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">app/auth.py</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    app/auth.py
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-500/80" />
@@ -92,32 +103,45 @@ function HeroSection() {
               {/* Code Content */}
               <div className="p-6 font-mono text-sm leading-7">
                 <div className="text-muted-foreground">
-                  <span className="text-blue-400">from</span> <span className="text-green-400">AuthLagao</span> <span className="text-blue-400">import</span> <span className="text-blue-300">api</span>
+                  <span className="text-blue-400">from</span>{" "}
+                  <span className="text-green-400">AuthLagao</span>{" "}
+                  <span className="text-blue-400">import</span>{" "}
+                  <span className="text-blue-300">api</span>
                 </div>
                 <div className="text-muted-foreground mt-4">
-                  <span className="text-gray-500"># initialize your software license check</span>
+                  <span className="text-gray-500">
+                    # initialize your software license check
+                  </span>
                 </div>
                 <div className="text-muted-foreground">
-                  <span className="text-blue-400">app</span> = <span className="text-blue-400">api</span>(
+                  <span className="text-blue-400">app</span> ={" "}
+                  <span className="text-blue-400">api</span>(
                 </div>
                 <div className="text-muted-foreground pl-4">
                   name=<span className="text-green-400">"myapp"</span>,
                 </div>
                 <div className="text-muted-foreground pl-4">
-                  ownerid=<span className="text-green-400">"APP_OWNER_ID"</span>,
+                  ownerid=<span className="text-green-400">"APP_OWNER_ID"</span>
+                  ,
                 </div>
                 <div className="text-muted-foreground pl-4">
                   version=<span className="text-green-400">"1.0"</span>
                 </div>
                 <div className="text-muted-foreground">)</div>
                 <div className="text-muted-foreground mt-4">
-                  <span className="text-gray-500"># secure login with HWID binding</span>
+                  <span className="text-gray-500">
+                    # secure login with HWID binding
+                  </span>
                 </div>
                 <div className="text-muted-foreground">
-                  <span className="text-blue-400">if</span> <span className="text-blue-300">app</span>.<span className="text-yellow-400">login</span>(username, password):
+                  <span className="text-blue-400">if</span>{" "}
+                  <span className="text-blue-300">app</span>.
+                  <span className="text-yellow-400">login</span>(username,
+                  password):
                 </div>
                 <div className="text-muted-foreground pl-4">
-                  <span className="text-yellow-400">print</span>(<span className="text-green-400">"Software Unlocked!"</span>)
+                  <span className="text-yellow-400">print</span>(
+                  <span className="text-green-400">"Software Unlocked!"</span>)
                 </div>
               </div>
 
@@ -125,7 +149,9 @@ function HeroSection() {
               <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-card/50">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs text-muted-foreground">Session live</span>
+                  <span className="text-xs text-muted-foreground">
+                    Session live
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="text-green-400">200 OK</span>
@@ -144,7 +170,7 @@ function HeroSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default HeroSection
+export default HeroSection;

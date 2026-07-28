@@ -10,22 +10,9 @@ import HowItsWork from "@/components/home/HowItsWork";
 import Faqs from "@/components/home/Faqs";
 import Pricing from "@/components/home/Pricing";
 import FooterHero from "@/components/home/FooterHero";
+import WhyChooseUs from "@/components/home/WhyChooseUs";
 
 function Index() {
-  // User Authentication Check
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogoutBtn = async () => {
-    const response = logout();
-    if (response.success) {
-      toast.success(response.message);
-      navigate("/login");
-    } else {
-      toast.error(response.message);
-    }
-  };
-
   return (
     <>
       <Header />
@@ -33,6 +20,7 @@ function Index() {
       <IntegrationTestimonial />
       <HowItsWork />
       <Features />
+      <WhyChooseUs />
       <Pricing />
       <Faqs />
       <FooterHero />

@@ -26,12 +26,15 @@ function Faqs() {
     <section id="faqs" className="bg-background border-b border-border py-20">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-14">
-          <p className="text-sm uppercase tracking-[0.35em] text-blue-400 font-semibold">FAQ</p>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+            Faqs
+          </div>
           <h2 className="mt-4 text-5xl font-space-grotesk font-bold tracking-tight text-foreground">
             Frequently Asked Questions.
           </h2>
           <p className="mt-4 text-muted-foreground leading-relaxed">
-            Get fast answers to the key questions about hosting, authentication, and reseller management.
+            Get fast answers to the key questions about hosting, authentication,
+            and reseller management.
           </p>
         </div>
 
@@ -46,7 +49,9 @@ function Faqs() {
                   onClick={() => setOpenIndex(isOpen ? -1 : index)}
                   className="flex w-full items-center justify-between gap-4 text-left"
                 >
-                  <span className="text-base font-semibold text-foreground">{item.question}</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {item.question}
+                  </span>
                   <ChevronDown
                     className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${
                       isOpen ? "rotate-180 text-blue-400" : ""
@@ -59,7 +64,9 @@ function Faqs() {
                     isOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
                   }`}
                 >
-                  <p className="pt-4 text-sm leading-7 text-muted-foreground">{item.answer}</p>
+                  <p className="pt-4 text-sm leading-7 text-muted-foreground">
+                    {item.answer}
+                  </p>
                 </div>
               </div>
             );

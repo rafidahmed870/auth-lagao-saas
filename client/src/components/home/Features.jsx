@@ -1,54 +1,57 @@
-import React from 'react'
-import { Shield, Users, Database, Plug, Key, CheckCircle } from 'lucide-react'
+import React from "react";
+import { Shield, Users, Database, Plug, Key, CheckCircle } from "lucide-react";
 
 const features = [
   {
     icon: Shield,
-    title: 'Deep Encryption',
+    title: "Deep Encryption",
     description:
-      'Secure your software assets with industry-standard AES-256 encryption protocols.',
+      "Secure your software assets with industry-standard AES-256 encryption protocols.",
   },
   {
     icon: Users,
-    title: 'User Control',
+    title: "User Control",
     description:
-      'Manage your users, subscriptions, and device bindings in real-time.',
+      "Manage your users, subscriptions, and device bindings in real-time.",
   },
   {
     icon: Database,
-    title: 'Secure Storage',
+    title: "Secure Storage",
     description:
-      'Store and sync application data remotely with encrypted at-rest protection.',
+      "Store and sync application data remotely with encrypted at-rest protection.",
   },
   {
     icon: Plug,
-    title: 'Integrations',
+    title: "Integrations",
     description:
-      'Connect your workflow with Discord webhooks and automated event notifications.',
+      "Connect your workflow with Discord webhooks and automated event notifications.",
   },
   {
     icon: Key,
-    title: 'License Engine',
+    title: "License Engine",
     description:
-      'Flexible license generation with customizable expiry and HWID locking.',
+      "Flexible license generation with customizable expiry and HWID locking.",
   },
   {
     icon: CheckCircle,
-    title: 'Clean API',
+    title: "Clean API",
     description:
-      'A simple REST API designed for ease of use and rapid deployment.',
+      "A simple REST API designed for ease of use and rapid deployment.",
   },
-]
+];
 
 function Features() {
   return (
-    <section id="features" className="relative py-28 overflow-hidden border-b border-border">
+    <section
+      id="features"
+      className="relative py-28 overflow-hidden border-b border-border"
+    >
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
-          <p className="text-sm font-semibold text-blue-400 uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
             Features
-          </p>
+          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-space-grotesk font-bold leading-tight max-w-2xl mx-auto mb-6">
             Everything you need to secure your software.
           </h2>
@@ -84,7 +87,7 @@ function Features() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default Features
+export default Features;
