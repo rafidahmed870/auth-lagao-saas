@@ -89,6 +89,29 @@ const applications = pgTable("applications", {
     .notNull(),
 });
 
+const appTeamMembers = pgTable("application_team_members", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  memberPermissions: text("member_permissions").array().notNull().default([]),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+const licenses = pgTable("licenses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+});
+
+const subscriptions = pgTable("subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+
+});
+
 module.exports = {
   roles,
   permissions,

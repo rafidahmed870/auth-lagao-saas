@@ -15,8 +15,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -27,3 +25,6 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Default Migration (Don't Need, Generate With Drizzle)
+migrations
