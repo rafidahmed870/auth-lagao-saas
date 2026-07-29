@@ -172,18 +172,18 @@ function CreateAppDialog({ open, onClose }) {
   );
 }
 
-// ── App Key copy badge ────────────────────────────────────────────────────────
-function AppKeyBadge({ appKey }) {
+// ── Owner ID copy badge ───────────────────────────────────────────────────────
+function OwnerIdBadge({ ownerId }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(appKey);
+    navigator.clipboard.writeText(ownerId);
     setCopied(true);
-    toast.success("App key copied!");
+    toast.success("Owner ID copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const short = appKey ? `${appKey.slice(0, 10)}...` : "";
+  const short = ownerId ? `${ownerId.slice(0, 8)}...` : "";
 
   return (
     <Tooltip>
@@ -204,7 +204,7 @@ function AppKeyBadge({ appKey }) {
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
-        Click to copy App Key
+        Owner ID — click to copy
       </TooltipContent>
     </Tooltip>
   );
@@ -244,7 +244,7 @@ export default function ClientHeader({ onMobileMenuToggle }) {
 
         {/* Right */}
         <div className="flex items-center gap-2">
-          {selectedApp?.appKey && <AppKeyBadge appKey={selectedApp.appKey} />}
+          {selectedApp?.ownerId && <OwnerIdBadge ownerId={selectedApp.ownerId} />}
 
           {selectedApp && (
             <Tooltip>

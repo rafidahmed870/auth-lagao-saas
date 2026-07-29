@@ -144,8 +144,8 @@ const appUsers = pgTable("app_users", {
   isActive: boolean("is_active").notNull().default(true),
 
   /* HWID (Hardware ID) device lock */
-  hwid: text("hwid").default(null),              // null = no device bound yet
-  hwidLocked: boolean("hwid_locked").notNull().default(false), // false = lock disabled
+  hwid: text("hwid").default(null), 
+  hwidLocked: boolean("hwid_locked").notNull().default(false), 
 
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

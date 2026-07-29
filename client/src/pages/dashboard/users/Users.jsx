@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useClient } from "@/context/ClientContext";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users as UsersIcon,
@@ -39,6 +40,7 @@ const formatDate = (date) =>
 function HwidCell({ user, appId }) {
   const { updateAppUser, resetUserHwid } = useClient();
   const [toggling, setToggling] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   const handleToggle = async (e) => {
@@ -50,56 +52,63 @@ function HwidCell({ user, appId }) {
     else toast.success(user.hwidLocked ? "Device lock disabled" : "Device lock enabled");
   };
 
-  const handleReset = async (e) => {
-    e.stopPropagation();
-    if (!window.confirm(`Reset HWID for "${user.username}"? Their device binding will be cleared.`)) return;
+  const handleReset = async () => {
     setResetting(true);
     const res = await resetUserHwid(appId, user.id);
     setResetting(false);
     if (!res?.success) toast.error(res?.message || "Failed to reset HWID");
-    else toast.success("HWID cleared — user can bind a new device");
+    else { toast.success("HWID cleared — user can bind a new device"); setResetOpen(false); }
   };
 
   return (
-    <div className="flex items-center gap-1.5">
-      {/* Lock toggle */}
-      <button
-        onClick={handleToggle}
-        disabled={toggling}
-        title={user.hwidLocked ? "Device lock ON — click to disable" : "Device lock OFF — click to enable"}
-        className={cn(
-          "flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-medium transition-all duration-200 disabled:opacity-50",
-          user.hwidLocked
-            ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
-            : "bg-secondary/40 border-border text-muted-foreground hover:bg-accent/60"
-        )}
-      >
-        {toggling ? (
-          <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-        ) : user.hwidLocked ? (
-          <ShieldCheck className="w-3 h-3" />
-        ) : (
-          <ShieldOff className="w-3 h-3" />
-        )}
-        <span className="hidden sm:inline">{user.hwidLocked ? "Locked" : "Unlocked"}</span>
-      </button>
-
-      {/* Reset HWID — only shown when lock is on AND a device is bound */}
-      {user.hwidLocked && user.hwid && (
+    <>
+      <div className="flex items-center gap-1.5">
+        {/* Lock toggle */}
         <button
-          onClick={handleReset}
-          disabled={resetting}
-          title="Reset bound device (clear HWID)"
-          className="p-1 rounded-md text-muted-foreground hover:text-orange-400 hover:bg-orange-400/10 transition-all duration-200 disabled:opacity-50"
-        >
-          {resetting ? (
-            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <RotateCcw className="w-3 h-3" />
+          onClick={handleToggle}
+          disabled={toggling}
+          title={user.hwidLocked ? "Device lock ON — click to disable" : "Device lock OFF — click to enable"}
+          className={cn(
+            "cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+            user.hwidLocked
+              ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
+              : "bg-secondary/40 border-border text-muted-foreground hover:bg-accent/60"
           )}
+        >
+          {toggling ? (
+            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+          ) : user.hwidLocked ? (
+            <ShieldCheck className="w-3 h-3" />
+          ) : (
+            <ShieldOff className="w-3 h-3" />
+          )}
+          <span className="hidden sm:inline">{user.hwidLocked ? "Locked" : "Unlocked"}</span>
         </button>
-      )}
-    </div>
+
+        {/* Reset HWID — only shown when lock is on AND a device is bound */}
+        {user.hwidLocked && user.hwid && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setResetOpen(true); }}
+            title="Reset bound device (clear HWID)"
+            className="cursor-pointer p-1 rounded-md text-muted-foreground hover:text-orange-400 hover:bg-orange-400/10 transition-all duration-200"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      {/* Reset HWID confirm */}
+      <ConfirmDialog
+        open={resetOpen}
+        onOpenChange={setResetOpen}
+        title="Reset Device Lock"
+        description={`This will clear the bound hardware ID for "${user.username}". They can bind a new device on their next login.`}
+        confirmLabel="Reset HWID"
+        variant="destructive"
+        loading={resetting}
+        onConfirm={handleReset}
+      />
+    </>
   );
 }
 
@@ -184,7 +193,7 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-accent/60 text-muted-foreground transition-colors"
+            className="cursor-pointer p-1.5 rounded-md hover:bg-accent/60 text-muted-foreground transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -255,7 +264,7 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, isActive: !p.isActive }))}
                   className={cn(
-                    "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border text-sm transition-colors",
+                    "cursor-pointer w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border text-sm transition-colors",
                     form.isActive
                       ? "bg-green-500/10 border-green-500/20 text-green-400"
                       : "bg-destructive/10 border-destructive/20 text-destructive"
@@ -334,14 +343,14 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-lg border border-border text-sm hover:bg-accent/60 transition-colors"
+              className="cursor-pointer flex-1 py-2.5 rounded-lg border border-border text-sm hover:bg-accent/60 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold font-space-grotesk hover:bg-primary/80 transition-colors disabled:opacity-60"
+              className="cursor-pointer flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold font-space-grotesk hover:bg-primary/80 transition-colors disabled:opacity-60"
             >
               {loading
                 ? isEdit ? "Saving..." : "Creating..."
@@ -356,100 +365,115 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
 
 // ── User table row ────────────────────────────────────────────────────────────
 function UserRow({ user, appId, onDelete, onEdit }) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const expired = isExpired(user.expiresAt);
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete user "${user.username}"? This cannot be undone.`)) return;
     setDeleting(true);
     const res = await onDelete(appId, user.id);
-    if (!res?.success) {
+    setDeleting(false);
+    if (res?.success) {
+      setDeleteOpen(false);
+    } else {
       toast.error(res?.message || "Failed to delete user");
-      setDeleting(false);
     }
   };
 
   return (
-    <motion.tr
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="border-b border-border/50 group hover:bg-accent/20 transition-colors"
-    >
-      {/* User info */}
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-bold text-primary font-space-grotesk">
-              {user.username?.charAt(0)?.toUpperCase()}
+    <>
+      <motion.tr
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="border-b border-border/50 group hover:bg-accent/20 transition-colors"
+      >
+        {/* User info */}
+        <td className="py-3 px-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-xs font-bold text-primary font-space-grotesk">
+                {user.username?.charAt(0)?.toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium font-space-grotesk text-foreground truncate">
+                {user.username}
+              </p>
+              {user.email && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Mail className="w-2.5 h-2.5 text-muted-foreground" />
+                  <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </td>
+
+        {/* Account status */}
+        <td className="py-3 px-4">
+          <span className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+            !user.isActive || expired
+              ? "bg-destructive/10 text-destructive border-destructive/20"
+              : "bg-green-500/10 text-green-400 border-green-500/20"
+          )}>
+            <span className={cn("w-1 h-1 rounded-full", !user.isActive || expired ? "bg-destructive" : "bg-green-400")} />
+            {!user.isActive ? "Banned" : expired ? "Expired" : "Active"}
+          </span>
+        </td>
+
+        {/* HWID lock — interactive inline toggle */}
+        <td className="py-3 px-4 hidden md:table-cell">
+          <HwidCell user={user} appId={appId} />
+        </td>
+
+        {/* Expiry */}
+        <td className="py-3 px-4 hidden sm:table-cell">
+          <div className="flex items-center gap-1.5">
+            <CalendarClock className={cn("w-3 h-3", expired ? "text-destructive" : "text-muted-foreground")} />
+            <span className={cn("text-xs", expired ? "text-destructive" : "text-muted-foreground")}>
+              {formatDate(user.expiresAt)}
             </span>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium font-space-grotesk text-foreground truncate">
-              {user.username}
-            </p>
-            {user.email && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <Mail className="w-2.5 h-2.5 text-muted-foreground" />
-                <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
-              </div>
-            )}
+        </td>
+
+        {/* Created */}
+        <td className="py-3 px-4 hidden lg:table-cell">
+          <span className="text-xs text-muted-foreground">{formatDate(user.createdAt)}</span>
+        </td>
+
+        {/* Row actions */}
+        <td className="py-3 px-4">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => onEdit(user)}
+              className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setDeleteOpen(true)}
+              className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
           </div>
-        </div>
-      </td>
+        </td>
+      </motion.tr>
 
-      {/* Account status */}
-      <td className="py-3 px-4">
-        <span className={cn(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
-          !user.isActive || expired
-            ? "bg-destructive/10 text-destructive border-destructive/20"
-            : "bg-green-500/10 text-green-400 border-green-500/20"
-        )}>
-          <span className={cn("w-1 h-1 rounded-full", !user.isActive || expired ? "bg-destructive" : "bg-green-400")} />
-          {!user.isActive ? "Banned" : expired ? "Expired" : "Active"}
-        </span>
-      </td>
-
-      {/* HWID lock — interactive inline toggle */}
-      <td className="py-3 px-4 hidden md:table-cell">
-        <HwidCell user={user} appId={appId} />
-      </td>
-
-      {/* Expiry */}
-      <td className="py-3 px-4 hidden sm:table-cell">
-        <div className="flex items-center gap-1.5">
-          <CalendarClock className={cn("w-3 h-3", expired ? "text-destructive" : "text-muted-foreground")} />
-          <span className={cn("text-xs", expired ? "text-destructive" : "text-muted-foreground")}>
-            {formatDate(user.expiresAt)}
-          </span>
-        </div>
-      </td>
-
-      {/* Created */}
-      <td className="py-3 px-4 hidden lg:table-cell">
-        <span className="text-xs text-muted-foreground">{formatDate(user.createdAt)}</span>
-      </td>
-
-      {/* Row actions */}
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => onEdit(user)}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </td>
-    </motion.tr>
+      {/* Delete confirm */}
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete User"
+        description={`This will permanently delete "${user.username}" and all associated data. This action cannot be undone.`}
+        confirmLabel="Delete User"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }
 
@@ -505,7 +529,7 @@ function UsersContent() {
         </div>
         <button
           onClick={() => { setEditUser(null); setModalOpen(true); }}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+          className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
         >
           <Plus className="w-3.5 h-3.5" />
           Add User
@@ -601,14 +625,14 @@ function UsersContent() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-1.5 rounded-md border border-border hover:bg-accent/60 transition-colors disabled:opacity-40"
+              className="cursor-pointer p-1.5 rounded-md border border-border hover:bg-accent/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-1.5 rounded-md border border-border hover:bg-accent/60 transition-colors disabled:opacity-40"
+              className="cursor-pointer p-1.5 rounded-md border border-border hover:bg-accent/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

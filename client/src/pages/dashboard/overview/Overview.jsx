@@ -14,8 +14,6 @@ import {
   Copy,
   Check,
   ArrowRight,
-  Eye,
-  EyeOff,
   AlertCircle,
   X,
 } from "lucide-react";
@@ -192,14 +190,13 @@ function StatCard({ label, value, icon: Icon, color, delay = 0 }) {
 // ── Application card ──────────────────────────────────────────────────────────
 function AppCard({ app, onSelect, onDelete, isSelected }) {
   const [copied, setCopied] = useState(false);
-  const [keyVisible, setKeyVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleCopy = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(app.appKey);
+    navigator.clipboard.writeText(app.ownerId);
     setCopied(true);
-    toast.success("App key copied!");
+    toast.success("Owner ID copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -254,20 +251,12 @@ function AppCard({ app, onSelect, onDelete, isSelected }) {
         </p>
       )}
 
-      {/* App key row */}
+      {/* Owner ID row */}
       <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/30 border border-border mb-4">
         <Shield className="w-3 h-3 text-primary shrink-0" />
         <code className="flex-1 text-[10px] font-mono text-muted-foreground truncate">
-          {keyVisible
-            ? app.appKey?.slice(0, 40) + "..."
-            : "•••••••••••••••••••••••••••"}
+          {app.ownerId}
         </code>
-        <button
-          onClick={(e) => { e.stopPropagation(); setKeyVisible((p) => !p); }}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {keyVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-        </button>
         <button
           onClick={handleCopy}
           className="text-muted-foreground hover:text-primary transition-colors"

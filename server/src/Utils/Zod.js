@@ -91,7 +91,9 @@ const createLicenseSchema = z.object({
     .max(500, "License key must not exceed 500 characters"),
   expiresAt: z
     .string()
-    .datetime({ message: "Invalid expiration date format (ISO 8601 required)" }),
+    .datetime({
+      message: "Invalid expiration date format (ISO 8601 required)",
+    }),
 });
 
 const updateLicenseSchema = z.object({
@@ -117,7 +119,7 @@ const createAppUserSchema = z.object({
     .max(50, "Username must not exceed 50 characters"),
   password: z
     .string()
-    .min(6, "Password must be at least 6 characters")
+    .min(1, "Password must be at least 1 characters")
     .max(255, "Password must not exceed 255 characters"),
   email: z
     .string()
@@ -128,7 +130,9 @@ const createAppUserSchema = z.object({
   hwidLocked: z.boolean().optional().default(false),
   expiresAt: z
     .string()
-    .datetime({ message: "Invalid expiration date format (ISO 8601 required)" }),
+    .datetime({
+      message: "Invalid expiration date format (ISO 8601 required)",
+    }),
 });
 
 const updateAppUserSchema = z.object({
@@ -139,7 +143,7 @@ const updateAppUserSchema = z.object({
     .optional(),
   password: z
     .string()
-    .min(6, "Password must be at least 6 characters")
+    .min(1, "Password must be at least 1 characters")
     .max(255, "Password must not exceed 255 characters")
     .optional(),
   email: z
@@ -218,4 +222,3 @@ module.exports = {
   appIdParamSchema,
   nestedParamSchema,
 };
-
