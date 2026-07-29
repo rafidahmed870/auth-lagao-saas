@@ -70,10 +70,12 @@ const sessions = pgTable("sessions", {
 /* CLIENTS APPLICATION */
 const applications = pgTable("applications", {
   id: uuid("id").defaultRandom().primaryKey(),
-  ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  ownerId: uuid("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   appName: varchar("app_name", { length: 255 }).notNull(),
   appDescription: text("app_description"),
-  appVersion: varchar("app_version", { length: 50 }).notNull(),
+  appVersion: varchar("app_version", { length: 50 }).notNull().default("1.0"),
   isActive: boolean("is_active").notNull().default(true),
 
   appKey: text("app_key").notNull(), // Public key that will provided
@@ -89,12 +91,28 @@ const applications = pgTable("applications", {
     .notNull(),
 });
 
-const appTeamMembers = pgTable("application_team_members", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
-  memberId: uuid("member_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  memberPermissions: text("member_permissions").array().notNull().default([]),
+/* TEAM BASED CONTROL COMMING SOON */
 
+// const appTeamMembers = pgTable("application_team_members", {
+//   id: uuid("id").defaultRandom().primaryKey(),
+//   appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+//   memberId: uuid("member_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+//   memberPermissions: text("member_permissions").array().notNull().default([]),
+
+//   createdAt: timestamp("created_at").defaultNow().notNull(),
+//   updatedAt: timestamp("updated_at")
+//     .defaultNow()
+//     .$onUpdate(() => new Date())
+//     .notNull(),
+// });
+
+const licenses = pgTable("licenses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  appId: uuid("app_id")
+    .notNull()
+    .references(() => applications.id, { onDelete: "cascade" }),
+  key: text("key").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -102,15 +120,36 @@ const appTeamMembers = pgTable("application_team_members", {
     .notNull(),
 });
 
-const licenses = pgTable("licenses", {
+const appSubscriptions = pgTable("app_subscriptions", {
   id: uuid("id").defaultRandom().primaryKey(),
-  appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  appId: uuid("app_id")
+    .notNull()
+    .references(() => applications.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 50 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
-const subscriptions = pgTable("subscriptions", {
+const appUsers = pgTable("app_users", {
   id: uuid("id").defaultRandom().primaryKey(),
-
-});
+  appId: uuid("app_id")
+    .notNull()
+    .references(() => applications.id, { onDelete: "cascade" }),
+  username: varchar("username", { length: 50}).notNull(),
+  password: varchar("password", { length: 255}).notNull(),
+  email: varchar("email", { length: 255}).unique(),
+  isActive: boolean("is_active").notNull().default(true),
+  
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+})
 
 module.exports = {
   roles,
@@ -118,4 +157,8 @@ module.exports = {
   rolePermissions,
   users,
   sessions,
+  applications,
+  licenses,
+  appSubscriptions,
+  appUsers,
 };
