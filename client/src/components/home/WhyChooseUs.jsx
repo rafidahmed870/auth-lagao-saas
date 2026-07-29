@@ -153,7 +153,7 @@ function WhyChooseUs() {
                 transition={{ delay: index * 0.15, duration: 0.5 }}
                 className="flex gap-4 items-start"
               >
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/5 border border-white/10">
+                <div className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/5 border border-white/10">
                   {point.icon}
                 </div>
                 <div className="space-y-2">
@@ -384,3 +384,4 @@ function WhyChooseUs() {
 }
 
 export default WhyChooseUs;
+

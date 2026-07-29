@@ -27,6 +27,7 @@ const {
   createAppUser,
   updateAppUser,
   deleteAppUser,
+  resetAppUserHwid,
 
   /* Subscriptions */
   getAllSubscriptions,
@@ -82,6 +83,8 @@ router.post("/:appId/users", AuthMiddleware, createAppUser);
 router.get("/:appId/users/:id", AuthMiddleware, getAppUserById);
 router.patch("/:appId/users/:id", AuthMiddleware, updateAppUser);
 router.delete("/:appId/users/:id", AuthMiddleware, deleteAppUser);
+/* PATCH /:appId/users/:id/reset-hwid → clear bound HWID */
+router.patch("/:appId/users/:id/reset-hwid", AuthMiddleware, resetAppUserHwid);
 
 /* ============================================
    SUBSCRIPTION ROUTES (nested under /:appId/subscriptions)

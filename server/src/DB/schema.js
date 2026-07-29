@@ -142,7 +142,11 @@ const appUsers = pgTable("app_users", {
   password: varchar("password", { length: 255}).notNull(),
   email: varchar("email", { length: 255}).unique(),
   isActive: boolean("is_active").notNull().default(true),
-  
+
+  /* HWID (Hardware ID) device lock */
+  hwid: text("hwid").default(null),              // null = no device bound yet
+  hwidLocked: boolean("hwid_locked").notNull().default(false), // false = lock disabled
+
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

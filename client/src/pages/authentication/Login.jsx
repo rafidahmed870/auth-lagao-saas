@@ -27,7 +27,7 @@ function Login() {
       const response = await login(email, password);
       if (response.success) {
         toast.success(response.message);
-        navigate("/");
+        navigate("/dashboard/overview");
       } else {
         toast.error(response.message);
       }
@@ -129,3 +129,4 @@ function Login() {
 }
 
 export default Login;
+

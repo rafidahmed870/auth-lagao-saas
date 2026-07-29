@@ -125,6 +125,7 @@ const createAppUserSchema = z.object({
     .max(255, "Email must not exceed 255 characters")
     .optional()
     .nullable(),
+  hwidLocked: z.boolean().optional().default(false),
   expiresAt: z
     .string()
     .datetime({ message: "Invalid expiration date format (ISO 8601 required)" }),
@@ -148,6 +149,7 @@ const updateAppUserSchema = z.object({
     .optional()
     .nullable(),
   isActive: z.boolean().optional(),
+  hwidLocked: z.boolean().optional(),
   expiresAt: z
     .string()
     .datetime({ message: "Invalid expiration date format (ISO 8601 required)" })

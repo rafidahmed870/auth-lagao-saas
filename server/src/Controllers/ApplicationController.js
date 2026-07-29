@@ -35,6 +35,7 @@ const {
   createAppUser,
   updateAppUser,
   deleteAppUser,
+  resetAppUserHwid,
   findAllSubscriptionsByApp,
   findSubscriptionByIdAndApp,
   createSubscription,
@@ -500,6 +501,37 @@ exports.deleteAppUser = TryCatch(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "App user deleted successfully",
+  });
+});
+
+/* Reset a user's bound HWID (clears hwid field to null) */
+exports.resetAppUserHwid = TryCatch(async (req, res) => {
+  const userId = req.user.id;
+  const { appId, id } = req.params;
+
+  const app = await verifyAppOwnership(appId, userId, res);
+  if (!app) return;
+
+  const paramValidation = nestedParamSchema.safeParse({ appId, id });
+  if (!paramValidation.success) {
+    const { firstError, allErrors } = formateZodError(paramValidation.error);
+    return res.status(400).json({ success: false, message: firstError, errors: allErrors });
+  }
+
+  const appUser = await findAppUserByIdAndApp(id, appId);
+  if (!appUser) {
+    return res.status(404).json({ success: false, message: "App user not found" });
+  }
+
+  const updated = await resetAppUserHwid(id, appId);
+
+  /* Remove password from response */
+  const { password, ...sanitizedUser } = updated;
+
+  return res.status(200).json({
+    success: true,
+    message: "HWID reset successfully",
+    data: sanitizedUser,
   });
 });
 

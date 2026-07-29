@@ -178,6 +178,16 @@ exports.deleteAppUser = async (appUserId, appId) => {
   return deleted[0] || null;
 };
 
+/* Reset HWID — clears the bound hardware ID for a user */
+exports.resetAppUserHwid = async (appUserId, appId) => {
+  const updated = await db
+    .update(appUsers)
+    .set({ hwid: null })
+    .where(and(eq(appUsers.id, appUserId), eq(appUsers.appId, appId)))
+    .returning();
+  return updated[0] || null;
+};
+
 /* ============================================
    SUBSCRIPTION FUNCTIONS
    ============================================ */

@@ -33,7 +33,7 @@ function IntegrationTestimonial() {
 
         <div className="flex animate-marquee">
           {doubled.map((logo, i) => (
-            <div key={i} className="flex-shrink-0 mx-8 md:mx-12">
+            <div key={i} className="shrink-0 mx-8 md:mx-12">
               <img
                 src={logo.src}
                 alt={logo.alt}
@@ -48,3 +48,4 @@ function IntegrationTestimonial() {
 }
 
 export default IntegrationTestimonial;
+
