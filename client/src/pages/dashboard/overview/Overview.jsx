@@ -16,6 +16,8 @@ import {
   ArrowRight,
   AlertCircle,
   X,
+  Pencil,
+  Power,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -23,13 +25,15 @@ import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 
 // ── Create App Dialog ─────────────────────────────────────────────────────────
-function CreateAppDialog({ open, onClose }) {
-  const { createApplication } = useClient();
+function AppFormDialog({ open, onClose, initialData = null }) {
+  const { createApplication, updateApplication } = useClient();
+  const isEdit = !!initialData;
+
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    appName: "",
-    appDescription: "",
-    appVersion: "1.0",
+    appName: initialData?.appName ?? "",
+    appDescription: initialData?.appDescription ?? "",
+    appVersion: initialData?.appVersion ?? "1.0",
   });
 
   const handleSubmit = async (e) => {
@@ -39,14 +43,16 @@ function CreateAppDialog({ open, onClose }) {
       return;
     }
     setLoading(true);
-    const res = await createApplication(form);
+    const res = isEdit
+      ? await updateApplication(initialData.id, form)
+      : await createApplication(form);
     setLoading(false);
+
     if (res?.success) {
-      toast.success("Application created!");
-      setForm({ appName: "", appDescription: "", appVersion: "1.0" });
+      toast.success(isEdit ? "Application updated!" : "Application created!");
       onClose();
     } else {
-      toast.error(res?.message || "Failed to create application");
+      toast.error(res?.message || (isEdit ? "Failed to update" : "Failed to create"));
     }
   };
 
@@ -70,14 +76,16 @@ function CreateAppDialog({ open, onClose }) {
             transition={{ duration: 0.2 }}
             className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl shadow-black/50"
           >
-            {/* Dialog header */}
+            {/* Header */}
             <div className="flex items-start justify-between p-6 pb-4 border-b border-border">
               <div>
                 <h2 className="text-base font-bold font-space-grotesk text-foreground">
-                  Create New Application
+                  {isEdit ? "Edit Application" : "Create New Application"}
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  An X25519 keypair will be auto-generated for your app.
+                  {isEdit
+                    ? "Update your application details."
+                    : "An X25519 keypair will be auto-generated for your app."}
                 </p>
               </div>
               <button
@@ -130,14 +138,15 @@ function CreateAppDialog({ open, onClose }) {
                 />
               </div>
 
-              {/* Info box */}
-              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/15">
-                <Shield className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Your app's public key will be shown after creation. Keep the
-                  private key secure — it's encrypted at rest with AES-256-GCM.
-                </p>
-              </div>
+              {!isEdit && (
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/15">
+                  <Shield className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Your app's public key will be shown after creation. The
+                    private key is encrypted at rest with AES-256-GCM.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-1">
                 <button
@@ -152,7 +161,9 @@ function CreateAppDialog({ open, onClose }) {
                   disabled={loading}
                   className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/80 transition-colors disabled:opacity-60 font-space-grotesk"
                 >
-                  {loading ? "Creating..." : "Create App"}
+                  {loading
+                    ? isEdit ? "Saving..." : "Creating..."
+                    : isEdit ? "Save Changes" : "Create App"}
                 </button>
               </div>
             </form>
@@ -188,9 +199,10 @@ function StatCard({ label, value, icon: Icon, color, delay = 0 }) {
 }
 
 // ── Application card ──────────────────────────────────────────────────────────
-function AppCard({ app, onSelect, onDelete, isSelected }) {
+function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }) {
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   const handleCopy = (e) => {
     e.stopPropagation();
@@ -209,6 +221,21 @@ function AppCard({ app, onSelect, onDelete, isSelected }) {
       toast.error(res?.message || "Failed to delete");
       setDeleting(false);
     }
+  };
+
+  const handleToggle = async (e) => {
+    e.stopPropagation();
+    setToggling(true);
+    const res = await onToggleActive(app.id, !app.isActive);
+    if (!res?.success) {
+      toast.error(res?.message || "Failed to update status");
+    }
+    setToggling(false);
+  };
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    onEdit(app);
   };
 
   return (
@@ -238,9 +265,7 @@ function AppCard({ app, onSelect, onDelete, isSelected }) {
           <h3 className="text-sm font-bold font-space-grotesk text-foreground truncate">
             {app.appName}
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            v{app.appVersion}
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">v{app.appVersion}</p>
         </div>
       </div>
 
@@ -265,27 +290,63 @@ function AppCard({ app, onSelect, onDelete, isSelected }) {
         </button>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between">
+      {/* Footer — status + actions always visible */}
+      <div className="flex items-center justify-between pt-1">
+        {/* Active / Inactive badge */}
         <div className="flex items-center gap-1.5">
-          <div className={cn("w-1.5 h-1.5 rounded-full", app.isActive ? "bg-green-400" : "bg-red-400")} />
+          <div
+            className={cn(
+              "w-1.5 h-1.5 rounded-full",
+              app.isActive ? "bg-green-400" : "bg-red-400"
+            )}
+          />
           <span className="text-xs text-muted-foreground">
             {app.isActive ? "Active" : "Inactive"}
           </span>
         </div>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {/* Edit */}
+          <button
+            onClick={handleEdit}
+            title="Edit application"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Toggle active/inactive */}
+          <button
+            onClick={handleToggle}
+            disabled={toggling}
+            title={app.isActive ? "Disable application" : "Enable application"}
+            className={cn(
+              "p-1.5 rounded-md transition-all duration-150 disabled:opacity-50",
+              app.isActive
+                ? "text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10"
+                : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
+            )}
+          >
+            <Power className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Delete */}
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            title="Delete application"
+            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 disabled:opacity-50"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </motion.div>
   );
 }
 
-// ── Add New App card (triggers dialog) ────────────────────────────────────────
+// ── Add New App card ──────────────────────────────────────────────────────────
 function AddAppCard({ onClick }) {
   return (
     <motion.button
@@ -299,12 +360,8 @@ function AddAppCard({ onClick }) {
         <PlusCircle className="w-5 h-5 text-primary" />
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium font-space-grotesk text-foreground">
-          New Application
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Click to create
-        </p>
+        <p className="text-sm font-medium font-space-grotesk text-foreground">New Application</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Click to create</p>
       </div>
     </motion.button>
   );
@@ -338,8 +395,15 @@ function OverviewContent() {
     setSelectedApp,
     appsLoading,
     deleteApplication,
+    updateApplication,
   } = useClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editApp, setEditApp] = useState(null); // app object being edited
+
+  const handleToggleActive = async (appId, isActive) => {
+    return await updateApplication(appId, { isActive });
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -366,10 +430,23 @@ function OverviewContent() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Applications" value={applications.length} icon={LayoutDashboard} color="bg-primary/15 text-primary" delay={0} />
-        <StatCard label="Active Apps" value={applications.filter((a) => a.isActive).length} icon={Activity} color="bg-green-500/15 text-green-400" delay={0.05} />
-        <StatCard label="Total" value={applications.length} icon={Shield} color="bg-blue-500/15 text-blue-400" delay={0.1} />
-        <StatCard label="Inactive" value={applications.filter((a) => !a.isActive).length} icon={AlertCircle} color="bg-yellow-500/15 text-yellow-400" delay={0.15} />
+        <StatCard label="Applications"  value={applications.length}                              icon={LayoutDashboard} color="bg-primary/15 text-primary"          delay={0}    />
+        <StatCard label="Active Apps"   value={applications.filter((a) => a.isActive).length}   icon={Activity}        color="bg-green-500/15 text-green-400"      delay={0.05} />
+        <StatCard label="Total"         value={applications.length}                              icon={Shield}          color="bg-blue-500/15 text-blue-400"        delay={0.1}  />
+        <StatCard label="Inactive"      value={applications.filter((a) => !a.isActive).length}  icon={AlertCircle}     color="bg-yellow-500/15 text-yellow-400"    delay={0.15} />
+      </div>
+
+      {/* Quick Access — above the grid */}
+      <div>
+        <h3 className="text-sm font-bold font-space-grotesk text-foreground mb-3">
+          Quick Access
+        </h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <QuickLink label="Licenses"      desc="Manage license keys"   icon={Key}      href="/dashboard/licenses"      color="bg-blue-500/15 text-blue-400"    />
+          <QuickLink label="Users"         desc="Manage app users"      icon={Users}    href="/dashboard/users"         color="bg-purple-500/15 text-purple-400" />
+          <QuickLink label="Subscriptions" desc="Manage tiers"          icon={CreditCard} href="/dashboard/subscriptions" color="bg-green-500/15 text-green-400" />
+          <QuickLink label="Team"          desc="Invite collaborators"  icon={Users}    href="/dashboard/team"          color="bg-orange-500/15 text-orange-400" />
+        </div>
       </div>
 
       {/* Selected app banner */}
@@ -394,10 +471,16 @@ function OverviewContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/dashboard/licenses" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 border border-primary/20 text-primary hover:bg-primary/25 transition-colors">
+              <Link
+                to="/dashboard/licenses"
+                className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 border border-primary/20 text-primary hover:bg-primary/25 transition-colors"
+              >
                 View Licenses
               </Link>
-              <Link to="/dashboard/users" className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card/40 hover:bg-card/60 transition-colors text-foreground">
+              <Link
+                to="/dashboard/users"
+                className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card/40 hover:bg-card/60 transition-colors text-foreground"
+              >
                 View Users
               </Link>
             </div>
@@ -411,9 +494,7 @@ function OverviewContent() {
           <h3 className="text-sm font-bold font-space-grotesk text-foreground">
             Your Applications
           </h3>
-          <span className="text-xs text-muted-foreground">
-            {applications.length} total
-          </span>
+          <span className="text-xs text-muted-foreground">{applications.length} total</span>
         </div>
 
         {appsLoading ? (
@@ -430,30 +511,28 @@ function OverviewContent() {
                 app={app}
                 onSelect={setSelectedApp}
                 onDelete={deleteApplication}
+                onToggleActive={handleToggleActive}
+                onEdit={(a) => setEditApp(a)}
                 isSelected={selectedApp?.id === app.id}
               />
             ))}
-            {/* Add new — opens dialog */}
-            <AddAppCard onClick={() => setDialogOpen(true)} />
+            <AddAppCard onClick={() => setCreateOpen(true)} />
           </div>
         )}
       </div>
 
-      {/* Quick Links */}
-      <div>
-        <h3 className="text-sm font-bold font-space-grotesk text-foreground mb-4">
-          Quick Access
-        </h3>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <QuickLink label="Licenses" desc="Manage license keys" icon={Key} href="/dashboard/licenses" color="bg-blue-500/15 text-blue-400" />
-          <QuickLink label="Users" desc="Manage app users" icon={Users} href="/dashboard/users" color="bg-purple-500/15 text-purple-400" />
-          <QuickLink label="Subscriptions" desc="Manage tiers" icon={CreditCard} href="/dashboard/subscriptions" color="bg-green-500/15 text-green-400" />
-          <QuickLink label="Team" desc="Invite collaborators" icon={Users} href="/dashboard/team" color="bg-orange-500/15 text-orange-400" />
-        </div>
-      </div>
+      {/* Create dialog */}
+      <AppFormDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+      />
 
-      {/* Create App Dialog */}
-      <CreateAppDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      {/* Edit dialog */}
+      <AppFormDialog
+        open={!!editApp}
+        onClose={() => setEditApp(null)}
+        initialData={editApp}
+      />
     </div>
   );
 }
