@@ -112,6 +112,8 @@ const licenses = pgTable("licenses", {
     .notNull()
     .references(() => applications.id, { onDelete: "cascade" }),
   key: text("key").notNull().unique(),
+  isUsed: boolean("is_used").notNull().default(false),   // has this key been redeemed?
+  usedBy: uuid("used_by").default(null),                 // app_user id who redeemed it (no FK to avoid circular ref)
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

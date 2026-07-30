@@ -28,3 +28,6 @@ lerna-debug.log*
 
 # Default Migration (Don't Need, Generate With Drizzle)
 migrations
+
+# examples directory
+examples

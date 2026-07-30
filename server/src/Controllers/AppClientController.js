@@ -1,0 +1,377 @@
+/**
+ * APP CLIENT CONTROLLER
+ * ─────────────────────────────────────────────────────────────────────────────
+ * These endpoints are called by the end-user's client application (desktop app,
+ * script, etc.) – NOT by the dashboard. The client identifies its application
+ * using the "App Key" shown in the dashboard.
+ *
+ * FLOW (mirrors KeyAuth pattern):
+ *   1. init    → Validate App Key, create a short-lived Redis session token
+ *   2. login   → Verify session token, authenticate app user (+ HWID check)
+ *   3. register → Verify session token, redeem license key, create app user
+ *   4. logout  → Revoke the client session token from Redis
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const TryCatch = require("../Middlewares/TryCatch");
+const redisClient = require("../Utils/RedisClient");
+const {
+  findApplicationByAppKey,
+} = require("../Models/ApplicationModel");
+const {
+  findAppUserByUsername,
+  createAppUser,
+  updateAppUser,
+} = require("../Models/ApplicationModel");
+const {
+  findLicenseByKey,
+  markLicenseAsUsed,
+} = require("../Models/ApplicationModel");
+
+/* ─── Redis key helpers ────────────────────────────────────────────────────── */
+
+/** Stores { appId, appVersion } so subsequent calls can trust the session */
+const clientSessionKey = (token) => `client_session:${token}`;
+
+/** How long a client session stays alive after init (10 minutes) */
+const CLIENT_SESSION_TTL = 60 * 10;
+
+/* ─── Internal helpers ─────────────────────────────────────────────────────── */
+
+/**
+ * Reads and validates a client session from Redis.
+ * Returns the parsed session object, or sends a 401 and returns null.
+ */
+const resolveSession = async (sessionToken, res) => {
+  if (!sessionToken) {
+    res.status(401).json({
+      success: false,
+      message: "Session token is required. Call /init first.",
+    });
+    return null;
+  }
+
+  const raw = await redisClient.get(clientSessionKey(sessionToken));
+  if (!raw) {
+    res.status(401).json({
+      success: false,
+      message: "Invalid or expired session token. Call /init again.",
+    });
+    return null;
+  }
+
+  return JSON.parse(raw);
+};
+
+/**
+ * Formats an app user record into the standard public response shape.
+ * Never exposes the password field.
+ */
+const formatUserInfo = (user) => ({
+  id: user.id,
+  username: user.username,
+  email: user.email ?? null,
+  hwid: user.hwid ?? null,
+  hwidLocked: user.hwidLocked,
+  isActive: user.isActive,
+  expiresAt: user.expiresAt,
+  createdAt: user.createdAt,
+});
+
+/* ─── Controllers ──────────────────────────────────────────────────────────── */
+
+/**
+ * POST /api/v1/client/init
+ *
+ * Body: { appKey, version }
+ *
+ * Looks up the application by its public App Key, verifies the application is
+ * active and that the supplied version matches, then creates a short-lived Redis
+ * session token the client must include in all subsequent requests.
+ *
+ * Response: { success, message, sessionToken, appInfo }
+ */
+exports.initializeV1 = TryCatch(async (req, res) => {
+  const { appKey, version } = req.body;
+
+  if (!appKey || !version) {
+    return res.status(400).json({
+      success: false,
+      message: "appKey and version are required.",
+    });
+  }
+
+  /* Look up application by its public App Key */
+  const app = await findApplicationByAppKey(appKey);
+  if (!app) {
+    return res.status(404).json({
+      success: false,
+      message: "Application not found. Check your App Key.",
+    });
+  }
+
+  /* Application must be enabled */
+  if (!app.isActive) {
+    return res.status(403).json({
+      success: false,
+      message: "This application is currently disabled.",
+    });
+  }
+
+  /* Version check — client must match the registered app version */
+  if (app.appVersion !== version) {
+    return res.status(400).json({
+      success: false,
+      message: `Version mismatch. Expected ${app.appVersion}, got ${version}.`,
+      latestVersion: app.appVersion,
+    });
+  }
+
+  /* Create a short-lived client session in Redis */
+  const sessionToken = crypto.randomBytes(32).toString("hex");
+  const sessionPayload = JSON.stringify({ appId: app.id });
+
+  await redisClient.set(clientSessionKey(sessionToken), sessionPayload, {
+    EX: CLIENT_SESSION_TTL,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Initialized successfully.",
+    sessionToken,
+    appInfo: {
+      name: app.appName,
+      version: app.appVersion,
+    },
+  });
+});
+
+/**
+ * POST /api/v1/client/login
+ *
+ * Body: { sessionToken, username, password, hwid }
+ *
+ * Authenticates an app user. Enforces:
+ *   - Account must be active
+ *   - Account must not be expired
+ *   - Password must match (bcrypt)
+ *   - If HWID lock is enabled and a HWID is already bound, it must match.
+ *     If HWID lock is enabled and no HWID is bound yet, the current HWID gets
+ *     bound on first successful login.
+ *
+ * Response: { success, message, userInfo }
+ */
+exports.loginV1 = TryCatch(async (req, res) => {
+  const { sessionToken, username, password, hwid } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "username and password are required.",
+    });
+  }
+
+  /* Validate session */
+  const session = await resolveSession(sessionToken, res);
+  if (!session) return;
+
+  /* Find the app user */
+  const user = await findAppUserByUsername(username, session.appId);
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials.",
+    });
+  }
+
+  /* Account must be active */
+  if (!user.isActive) {
+    return res.status(403).json({
+      success: false,
+      message: "Your account has been disabled. Contact the application owner.",
+    });
+  }
+
+  /* Account expiry check */
+  if (new Date() > new Date(user.expiresAt)) {
+    return res.status(403).json({
+      success: false,
+      message: "Your account has expired. Contact the application owner.",
+    });
+  }
+
+  /* Password check */
+  const passwordValid = await bcrypt.compare(password, user.password);
+  if (!passwordValid) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials.",
+    });
+  }
+
+  /* HWID check / binding */
+  if (user.hwidLocked) {
+    if (!hwid) {
+      return res.status(400).json({
+        success: false,
+        message: "HWID is required for this application.",
+      });
+    }
+
+    if (user.hwid && user.hwid !== hwid) {
+      return res.status(403).json({
+        success: false,
+        message: "HWID mismatch. This account is locked to a different device.",
+      });
+    }
+
+    /* First login — bind this HWID to the account */
+    if (!user.hwid) {
+      await updateAppUser(user.id, session.appId, { hwid });
+      user.hwid = hwid;
+    }
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: `Welcome back, ${user.username}!`,
+    userInfo: formatUserInfo(user),
+  });
+});
+
+/**
+ * POST /api/v1/client/register
+ *
+ * Body: { sessionToken, username, password, licenseKey, hwid, email? }
+ *
+ * Registers a new app user by redeeming a license key. Enforces:
+ *   - License key must exist for this application
+ *   - License key must not be already used
+ *   - License key must not be expired
+ *   - Username must not already exist for this application
+ *
+ * The license key's expiresAt becomes the new user's expiresAt.
+ *
+ * Response: { success, message, userInfo }
+ */
+exports.registerV1 = TryCatch(async (req, res) => {
+  const { sessionToken, username, password, licenseKey, hwid, email } = req.body;
+
+  if (!username || !password || !licenseKey) {
+    return res.status(400).json({
+      success: false,
+      message: "username, password, and licenseKey are required.",
+    });
+  }
+
+  /* Validate session */
+  const session = await resolveSession(sessionToken, res);
+  if (!session) return;
+
+  /* Validate the license key */
+  const license = await findLicenseByKey(licenseKey, session.appId);
+  if (!license) {
+    return res.status(404).json({
+      success: false,
+      message: "Invalid license key.",
+    });
+  }
+
+  if (license.isUsed) {
+    return res.status(409).json({
+      success: false,
+      message: "This license key has already been used.",
+    });
+  }
+
+  if (new Date() > new Date(license.expiresAt)) {
+    return res.status(410).json({
+      success: false,
+      message: "This license key has expired.",
+    });
+  }
+
+  /* Username uniqueness check */
+  const existingUser = await findAppUserByUsername(username, session.appId);
+  if (existingUser) {
+    return res.status(409).json({
+      success: false,
+      message: "Username already taken.",
+    });
+  }
+
+  /* Hash password */
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  /* Create the app user — inherit expiry from the license */
+  const newUser = await createAppUser({
+    appId: session.appId,
+    username,
+    password: hashedPassword,
+    email: email ?? null,
+    hwid: hwid ?? null,
+    hwidLocked: hwid ? true : false, // auto-lock HWID if one was provided at register
+    expiresAt: license.expiresAt,
+  });
+
+  /* Mark the license as consumed */
+  await markLicenseAsUsed(license.id, newUser.id);
+
+  return res.status(201).json({
+    success: true,
+    message: "Registration successful!",
+    userInfo: formatUserInfo(newUser),
+  });
+});
+
+/**
+ * POST /api/v1/client/logout
+ *
+ * Body: { sessionToken }
+ *
+ * Revokes the client session from Redis. Lightweight — the client app should
+ * call this when the user exits or explicitly logs out.
+ *
+ * Response: { success, message }
+ */
+exports.logoutV1 = TryCatch(async (req, res) => {
+  const { sessionToken } = req.body;
+
+  if (!sessionToken) {
+    return res.status(400).json({
+      success: false,
+      message: "sessionToken is required.",
+    });
+  }
+
+  await redisClient.del(clientSessionKey(sessionToken));
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully.",
+  });
+});
+
+/**
+ * POST /api/v1/client/check
+ *
+ * Body: { sessionToken }
+ *
+ * Lets the client app verify that the current session token is still alive
+ * (e.g. for periodic heartbeat checks). Returns 200 if valid, 401 if not.
+ *
+ * Response: { success, message }
+ */
+exports.checkV1 = TryCatch(async (req, res) => {
+  const { sessionToken } = req.body;
+
+  const session = await resolveSession(sessionToken, res);
+  if (!session) return;
+
+  return res.status(200).json({
+    success: true,
+    message: "Session is active.",
+  });
+});

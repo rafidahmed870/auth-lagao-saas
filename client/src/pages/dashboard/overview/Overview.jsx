@@ -77,7 +77,7 @@ function CreateAppDialog({ open, onClose }) {
                   Create New Application
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  An RSA-2048 keypair will be auto-generated for encryption.
+                  An X25519 keypair will be auto-generated for your app.
                 </p>
               </div>
               <button
@@ -194,9 +194,9 @@ function AppCard({ app, onSelect, onDelete, isSelected }) {
 
   const handleCopy = (e) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(app.ownerId);
+    navigator.clipboard.writeText(app.appKey);
     setCopied(true);
-    toast.success("Owner ID copied!");
+    toast.success("App Key copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -251,11 +251,11 @@ function AppCard({ app, onSelect, onDelete, isSelected }) {
         </p>
       )}
 
-      {/* Owner ID row */}
+      {/* App Key row */}
       <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/30 border border-border mb-4">
-        <Shield className="w-3 h-3 text-primary shrink-0" />
+        <Key className="w-3 h-3 text-primary shrink-0" />
         <code className="flex-1 text-[10px] font-mono text-muted-foreground truncate">
-          {app.ownerId}
+          {app.appKey}
         </code>
         <button
           onClick={handleCopy}

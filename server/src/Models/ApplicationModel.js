@@ -32,6 +32,14 @@ exports.findApplicationById = async (appId) => {
   return app[0] || null;
 };
 
+exports.findApplicationByAppKey = async (appKey) => {
+  const app = await db
+    .select()
+    .from(applications)
+    .where(eq(applications.appKey, appKey));
+  return app[0] || null;
+};
+
 exports.findApplicationByOwnerAndId = async (ownerId, appId) => {
   const app = await db
     .select()
@@ -78,6 +86,23 @@ exports.findAllLicensesByApp = async (appId) => {
     .from(licenses)
     .where(eq(licenses.appId, appId));
   return result;
+};
+
+exports.findLicenseByKey = async (key, appId) => {
+  const result = await db
+    .select()
+    .from(licenses)
+    .where(and(eq(licenses.key, key), eq(licenses.appId, appId)));
+  return result[0] || null;
+};
+
+exports.markLicenseAsUsed = async (licenseId, appUserId) => {
+  const updated = await db
+    .update(licenses)
+    .set({ isUsed: true, usedBy: appUserId })
+    .where(eq(licenses.id, licenseId))
+    .returning();
+  return updated[0] || null;
 };
 
 exports.findLicenseById = async (licenseId) => {

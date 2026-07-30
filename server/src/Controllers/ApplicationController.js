@@ -110,7 +110,7 @@ exports.createApplication = TryCatch(async (req, res) => {
     });
   }
 
-  /* Generate keypair using RafidKMS (handles RSA generation + AES wrapping) */
+  /* Generate keypair using RafidKMS (X25519 ECDH keypair + AES-256-GCM wrapping) */
   const keyPair = kms.generateAppKeyPair();
 
   const newApp = await createApplication({
