@@ -11,6 +11,7 @@ const {
   timestamp,
   text,
   boolean,
+  serial,
 } = require("drizzle-orm/pg-core");
 
 /* PLATFORM USERS ROLE BASED PERMISSION TABLE */
@@ -91,20 +92,29 @@ const applications = pgTable("applications", {
     .notNull(),
 });
 
-/* TEAM BASED CONTROL COMMING SOON */
+/* ACL/ACCESS CONTROL LIST FOR APPLICATION/CLIENT LEVEL CONTROL [TEAM MANAGEMENT SYSTEM] */
+const appLevelPermissions = pgTable("app_level_permissions", {
+  id: serial("id").primaryKey(), // Auto-incrementing ID for app-level permissions because they are fixed and not user-defined
+  permissionName: varchar("permission_name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
 
-// const appTeamMembers = pgTable("application_team_members", {
-//   id: uuid("id").defaultRandom().primaryKey(),
-//   appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
-//   memberId: uuid("member_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-//   memberPermissions: text("member_permissions").array().notNull().default([]),
-
-//   createdAt: timestamp("created_at").defaultNow().notNull(),
-//   updatedAt: timestamp("updated_at")
-//     .defaultNow()
-//     .$onUpdate(() => new Date())
-//     .notNull(),
-// });
+const appTeamMembers = pgTable("application_team_members", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  appId: uuid("app_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  memberPermissions: text("member_permissions").array().notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
 
 const licenses = pgTable("licenses", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -167,4 +177,6 @@ module.exports = {
   licenses,
   appSubscriptions,
   appUsers,
+  appLevelPermissions,
+  appTeamMembers,
 };

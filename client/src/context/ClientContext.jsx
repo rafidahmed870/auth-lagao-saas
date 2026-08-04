@@ -17,6 +17,11 @@ export function ClientProvider({ children }) {
   const [subscriptions, setSubscriptions] = useState([]);
   const [resourceLoading, setResourceLoading] = useState(false);
 
+  // ── Team ──────────────────────────────────────────────────────────────────
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [permissionCatalogue, setPermissionCatalogue] = useState([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+
   // ─────────────────────────────────────────────────────────────────────────
   //  APPLICATIONS
   // ─────────────────────────────────────────────────────────────────────────
@@ -222,6 +227,69 @@ export function ClientProvider({ children }) {
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  //  TEAM MANAGEMENT
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const fetchTeamMembers = useCallback(async (appId) => {
+    if (!appId) return;
+    setTeamLoading(true);
+    try {
+      const res = await api.get(`/applications/${appId}/team/members`);
+      setTeamMembers(res.data.data || []);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to fetch team members");
+    } finally {
+      setTeamLoading(false);
+    }
+  }, []);
+
+  const fetchPermissionCatalogue = useCallback(async (appId) => {
+    if (!appId) return;
+    try {
+      const res = await api.get(`/applications/${appId}/team/permissions`);
+      setPermissionCatalogue(res.data.data || []);
+    } catch {
+      // Non-critical — silently fail; the UI falls back to the hardcoded list
+    }
+  }, []);
+
+  const inviteTeamMember = async (appId, data) => {
+    try {
+      const res = await api.post(`/applications/${appId}/team/members`, data);
+      if (res.data.success) {
+        await fetchTeamMembers(appId);
+        return { success: true, data: res.data.data };
+      }
+    } catch (err) {
+      return { success: false, message: err?.response?.data?.message || "Failed to invite member" };
+    }
+  };
+
+  const updateTeamMember = async (appId, memberId, data) => {
+    try {
+      const res = await api.patch(`/applications/${appId}/team/members/${memberId}`, data);
+      if (res.data.success) {
+        await fetchTeamMembers(appId);
+        return { success: true, data: res.data.data };
+      }
+    } catch (err) {
+      return { success: false, message: err?.response?.data?.message || "Failed to update permissions" };
+    }
+  };
+
+  const removeTeamMember = async (appId, memberId) => {
+    try {
+      const res = await api.delete(`/applications/${appId}/team/members/${memberId}`);
+      if (res.data.success) {
+        await fetchTeamMembers(appId);
+        return { success: true };
+      }
+    } catch (err) {
+      return { success: false, message: err?.response?.data?.message || "Failed to remove member" };
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
   //  Bootstrap on mount
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -265,6 +333,16 @@ export function ClientProvider({ children }) {
         fetchSubscriptions,
         createSubscription,
         deleteSubscription,
+
+        // Team
+        teamMembers,
+        permissionCatalogue,
+        teamLoading,
+        fetchTeamMembers,
+        fetchPermissionCatalogue,
+        inviteTeamMember,
+        updateTeamMember,
+        removeTeamMember,
       }}
     >
       {children}

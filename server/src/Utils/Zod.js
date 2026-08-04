@@ -196,6 +196,54 @@ const nestedParamSchema = z.object({
   id: z.string().uuid("Invalid ID format"),
 });
 
+/* ============================================
+   TEAM MANAGEMENT SCHEMAS
+   ============================================ */
+
+/**
+ * All permission slugs that can be assigned to a team member.
+ * These map 1-to-1 with rows in the app_level_permissions table.
+ * Format:  <resource>.<sub-resource?>.<action>
+ */
+const TEAM_PERMISSIONS = [
+  // Application
+  "app.view",
+  "app.update",
+  // Licenses
+  "app.license.view",
+  "app.license.create",
+  "app.license.update",
+  "app.license.delete",
+  // End-users
+  "app.user.view",
+  "app.user.create",
+  "app.user.update",
+  "app.user.delete",
+  "app.user.hwid.reset",
+  // Subscriptions
+  "app.subscription.view",
+  "app.subscription.create",
+  "app.subscription.update",
+  "app.subscription.delete",
+  // Team
+  "app.team.view",
+  "app.team.manage",
+];
+
+const inviteTeamMemberSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  permissions: z
+    .array(z.enum(TEAM_PERMISSIONS, { message: "Invalid permission slug" }))
+    .min(1, "At least one permission must be assigned")
+    .default([]),
+});
+
+const updateTeamMemberPermissionsSchema = z.object({
+  permissions: z
+    .array(z.enum(TEAM_PERMISSIONS, { message: "Invalid permission slug" }))
+    .min(1, "At least one permission must be assigned"),
+});
+
 module.exports = {
   formateZodError,
   registerSchema,
@@ -216,6 +264,11 @@ module.exports = {
   /* Subscription */
   createSubscriptionSchema,
   updateSubscriptionSchema,
+
+  /* Team */
+  inviteTeamMemberSchema,
+  updateTeamMemberPermissionsSchema,
+  TEAM_PERMISSIONS,
 
   /* Param Schemas */
   uuidParamSchema,

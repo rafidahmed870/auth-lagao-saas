@@ -41,7 +41,9 @@ const {
   createSubscription,
   updateSubscription,
   deleteSubscription,
+  findApplicationById,
 } = require("../Models/ApplicationModel");
+const { findTeamMemberByUserId } = require("../Models/TeamModel");
 const RafidKMS = require("../Utils/KMS");
 const bcrypt = require("bcryptjs");
 
@@ -49,10 +51,18 @@ const bcrypt = require("bcryptjs");
 const kms = new RafidKMS(process.env.APP_MASTER_KEY);
 
 /* ============================================
-   HELPER: Verify app ownership
+   HELPER: Verify app ownership or team access
    ============================================ */
 
-const verifyAppOwnership = async (appId, ownerId, res) => {
+/**
+ * Resolves the application and verifies the requesting user is either:
+ *   a) the application owner, OR
+ *   b) a team member with the required permission slug.
+ *
+ * Pass requiredPermission = null to allow any authenticated team member.
+ * Returns the app record, or sends a response and returns null.
+ */
+const verifyAppOwnership = async (appId, userId, res, requiredPermission = null) => {
   const paramValidation = appIdParamSchema.safeParse({ appId });
   if (!paramValidation.success) {
     const { firstError, allErrors } = formateZodError(paramValidation.error);
@@ -60,12 +70,32 @@ const verifyAppOwnership = async (appId, ownerId, res) => {
     return null;
   }
 
-  const app = await findApplicationByOwnerAndId(ownerId, appId);
-  if (!app) {
+  /* Owner path — fast and most common */
+  const app = await findApplicationByOwnerAndId(userId, appId);
+  if (app) return app;
+
+  /* Team member path — check membership + permission */
+  const appById = await findApplicationById(appId);
+  if (!appById) {
     res.status(404).json({ success: false, message: "Application not found" });
     return null;
   }
-  return app;
+
+  const membership = await findTeamMemberByUserId(userId, appId);
+  if (!membership) {
+    res.status(404).json({ success: false, message: "Application not found" });
+    return null;
+  }
+
+  if (requiredPermission && !membership.memberPermissions.includes(requiredPermission)) {
+    res.status(403).json({
+      success: false,
+      message: `You do not have the required permission: ${requiredPermission}`,
+    });
+    return null;
+  }
+
+  return appById;
 };
 
 /* ============================================
@@ -87,7 +117,7 @@ exports.getApplicationById = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, null);
   if (!app) return;
 
   return res.status(200).json({
@@ -141,7 +171,7 @@ exports.updateApplication = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, null);
   if (!app) return;
 
   const validation = updateApplicationSchema.safeParse(req.body);
@@ -175,7 +205,7 @@ exports.deleteApplication = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, null);
   if (!app) return;
 
   await deleteApplication(appId, userId);
@@ -194,7 +224,7 @@ exports.getAllLicenses = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.license.view");
   if (!app) return;
 
   const allLicenses = await findAllLicensesByApp(appId);
@@ -210,7 +240,7 @@ exports.getLicenseById = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.license.view");
   if (!app) return;
 
   const paramValidation = nestedParamSchema.safeParse({ appId, id });
@@ -235,7 +265,7 @@ exports.createLicense = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.license.create");
   if (!app) return;
 
   const validation = createLicenseSchema.safeParse(req.body);
@@ -265,7 +295,7 @@ exports.updateLicense = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.license.update");
   if (!app) return;
 
   const license = await findLicenseByIdAndApp(id, appId);
@@ -308,7 +338,7 @@ exports.deleteLicense = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.license.delete");
   if (!app) return;
 
   const license = await findLicenseByIdAndApp(id, appId);
@@ -332,7 +362,7 @@ exports.getAllAppUsers = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.user.view");
   if (!app) return;
 
   const allUsers = await findAllUsersByApp(appId);
@@ -351,7 +381,7 @@ exports.getAppUserById = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.user.view");
   if (!app) return;
 
   const paramValidation = nestedParamSchema.safeParse({ appId, id });
@@ -379,7 +409,7 @@ exports.createAppUser = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.user.create");
   if (!app) return;
 
   const validation = createAppUserSchema.safeParse(req.body);
@@ -425,7 +455,7 @@ exports.updateAppUser = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.user.update");
   if (!app) return;
 
   const appUser = await findAppUserByIdAndApp(id, appId);
@@ -488,7 +518,7 @@ exports.deleteAppUser = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.user.delete");
   if (!app) return;
 
   const appUser = await findAppUserByIdAndApp(id, appId);
@@ -509,7 +539,7 @@ exports.resetAppUserHwid = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.user.hwid.reset");
   if (!app) return;
 
   const paramValidation = nestedParamSchema.safeParse({ appId, id });
@@ -543,7 +573,7 @@ exports.getAllSubscriptions = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.subscription.view");
   if (!app) return;
 
   const allSubs = await findAllSubscriptionsByApp(appId);
@@ -559,7 +589,7 @@ exports.getSubscriptionById = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.subscription.view");
   if (!app) return;
 
   const paramValidation = nestedParamSchema.safeParse({ appId, id });
@@ -584,7 +614,7 @@ exports.createSubscription = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.subscription.create");
   if (!app) return;
 
   const validation = createSubscriptionSchema.safeParse(req.body);
@@ -613,7 +643,7 @@ exports.updateSubscription = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.subscription.update");
   if (!app) return;
 
   const subscription = await findSubscriptionByIdAndApp(id, appId);
@@ -651,7 +681,7 @@ exports.deleteSubscription = TryCatch(async (req, res) => {
   const userId = req.user.id;
   const { appId, id } = req.params;
 
-  const app = await verifyAppOwnership(appId, userId, res);
+  const app = await verifyAppOwnership(appId, userId, res, "app.subscription.delete");
   if (!app) return;
 
   const subscription = await findSubscriptionByIdAndApp(id, appId);

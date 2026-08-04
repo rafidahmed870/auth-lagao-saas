@@ -48,7 +48,6 @@ const NAV_ITEMS = [
     label: "Team",
     icon: UsersRound,
     href: "/dashboard/team",
-    badge: "Soon",
   },
 ];
 

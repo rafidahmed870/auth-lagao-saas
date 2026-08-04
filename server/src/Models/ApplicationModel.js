@@ -32,6 +32,14 @@ exports.findApplicationById = async (appId) => {
   return app[0] || null;
 };
 
+exports.findApplicationById = async (appId) => {
+  const app = await db
+    .select()
+    .from(applications)
+    .where(eq(applications.id, appId));
+  return app[0] || null;
+};
+
 exports.findApplicationByAppKey = async (appKey) => {
   const app = await db
     .select()
