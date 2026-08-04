@@ -15,13 +15,21 @@ import {
   ArrowRight,
   AlertCircle,
   X,
-  Pencil,
+  Pencil, 
+  Eye,
   Power,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 // ── Create App Dialog ─────────────────────────────────────────────────────────
 function AppFormDialog({ open, onClose, initialData = null }) {
@@ -89,7 +97,7 @@ function AppFormDialog({ open, onClose, initialData = null }) {
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 -mt-0.5 rounded-md hover:bg-accent/60 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-1.5 -mt-0.5 rounded-md cursor-pointer hover:bg-accent/60 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -151,14 +159,14 @@ function AppFormDialog({ open, onClose, initialData = null }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-accent/60 transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-lg cursor-pointer border border-border text-sm font-medium text-foreground hover:bg-accent/60 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/80 transition-colors disabled:opacity-60 font-space-grotesk"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-primary cursor-pointer text-primary-foreground text-sm font-medium hover:bg-primary/80 transition-colors disabled:opacity-60 font-space-grotesk"
                 >
                   {loading
                     ? isEdit ? "Saving..." : "Creating..."
@@ -170,6 +178,90 @@ function AppFormDialog({ open, onClose, initialData = null }) {
         </div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ── Application details sheet ─────────────────────────────────────────────
+function AppDetailsSheet({ open, app, onOpenChange }) {
+  const [copied, setCopied] = useState(false);
+
+  if (!app) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(app.appKey);
+      setCopied(true);
+      //toast.success("Application key copied!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Unable to copy application key");
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="sm:max-w-md">
+        <SheetHeader className="border-b border-border/60 pb-4">
+          <SheetTitle className="text-left">{app.appName}</SheetTitle>
+          <SheetDescription className="text-left">
+            {app.appDescription || "Application details and secure access information."}
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="space-y-4 px-4 pb-4">
+          <div className="rounded-xl border border-border bg-card/60 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Status</span>
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-xs font-medium",
+                  app.isActive ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
+                )}
+              >
+                {app.isActive ? "Active" : "Inactive"}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3 text-sm">
+              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                <span className="text-muted-foreground">App Name</span>
+                <span className="font-medium text-foreground">{app.appName}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                <span className="text-muted-foreground">Version</span>
+                <span className="font-medium text-foreground">v{app.appVersion}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                <span className="text-muted-foreground">App ID</span>
+                <span className="font-medium text-foreground">{app.id}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card/60 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-foreground">Application Key</p>
+              <button
+                onClick={handleCopy}
+                className="cursor-pointer text-muted-foreground hover:text-primary transition-colors"
+              >
+                {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
+            <code className="mt-2 block break-all rounded-lg bg-secondary/40 p-3 text-[11px] font-mono text-muted-foreground">
+              {app.appKey}
+            </code>
+          </div>
+
+          <div className="rounded-xl border border-border bg-primary/5 p-4">
+            <p className="text-sm font-semibold text-foreground">Secret / Private key</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              This is encrypted and stored securely on the server. It is not exposed in this view.
+            </p>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -198,7 +290,7 @@ function StatCard({ label, value, icon: Icon, color, delay = 0 }) {
 }
 
 // ── Application card ──────────────────────────────────────────────────────────
-function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }) {
+function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSelected }) {
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -207,7 +299,7 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }
     e.stopPropagation();
     navigator.clipboard.writeText(app.appKey);
     setCopied(true);
-    toast.success("App Key copied!");
+    //toast.success("App Key copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -230,6 +322,11 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }
       toast.error(res?.message || "Failed to update status");
     }
     setToggling(false);
+  };
+
+  const handleView = (e) => {
+    e.stopPropagation();
+    onView(app);
   };
 
   const handleEdit = (e) => {
@@ -306,11 +403,21 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }
 
         {/* Action buttons */}
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+
+          {/* View */}
+          <button
+            onClick={handleView}
+            title="View Details"
+            className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+
           {/* Edit */}
           <button
             onClick={handleEdit}
-            title="Edit application"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
+            title="Edit"
+            className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
           >
             <Pencil className="w-3.5 h-3.5" />
           </button>
@@ -319,9 +426,9 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }
           <button
             onClick={handleToggle}
             disabled={toggling}
-            title={app.isActive ? "Disable application" : "Enable application"}
+            title={app.isActive ? "Stop Application" : "Enable Application"}
             className={cn(
-              "p-1.5 rounded-md transition-all duration-150 disabled:opacity-50",
+              "p-1.5 rounded-md cursor-pointer transition-all duration-150 disabled:opacity-50",
               app.isActive
                 ? "text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10"
                 : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
@@ -334,8 +441,8 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, isSelected }
           <button
             onClick={handleDelete}
             disabled={deleting}
-            title="Delete application"
-            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 disabled:opacity-50"
+            title="Delete Application"
+            className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 disabled:opacity-50"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -353,7 +460,7 @@ function AddAppCard({ onClick }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.25 }}
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-5 hover:border-primary/40 hover:bg-card/40 transition-all duration-200 text-muted-foreground hover:text-foreground w-full min-h-[200px] group"
+      className="flex flex-col items-center justify-center cursor-pointer gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-5 hover:border-primary/40 hover:bg-card/40 transition-all duration-200 text-muted-foreground hover:text-foreground w-full min-h-[200px] group"
     >
       <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
         <PlusCircle className="w-5 h-5 text-primary" />
@@ -399,9 +506,16 @@ function OverviewContent() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editApp, setEditApp] = useState(null); // app object being edited
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsApp, setDetailsApp] = useState(null);
 
   const handleToggleActive = async (appId, isActive) => {
     return await updateApplication(appId, { isActive });
+  };
+
+  const handleViewDetails = (app) => {
+    setDetailsApp(app);
+    setDetailsOpen(true);
   };
 
   return (
@@ -421,9 +535,9 @@ function OverviewContent() {
             Here's what's happening with your applications.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground px-3 py-1.5 rounded-lg border border-border bg-card/40">
+        <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground px-3 py-1.5 rounded-lg border border-border bg-card/40">
           <Activity className="w-3 h-3 text-green-400" />
-          All systems operational
+          Server Online
         </div>
       </motion.div>
 
@@ -512,6 +626,7 @@ function OverviewContent() {
                 onDelete={deleteApplication}
                 onToggleActive={handleToggleActive}
                 onEdit={(a) => setEditApp(a)}
+                onView={handleViewDetails}
                 isSelected={selectedApp?.id === app.id}
               />
             ))}
@@ -519,6 +634,15 @@ function OverviewContent() {
           </div>
         )}
       </div>
+
+      <AppDetailsSheet
+        open={detailsOpen}
+        app={detailsApp}
+        onOpenChange={(open) => {
+          setDetailsOpen(open);
+          if (!open) setDetailsApp(null);
+        }}
+      />
 
       {/* Create dialog */}
       <AppFormDialog

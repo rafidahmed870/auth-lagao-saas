@@ -91,7 +91,7 @@ function CreateAppDialog({ open, onClose }) {
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 -mt-0.5 rounded-md hover:bg-accent/60 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-1.5 -mt-0.5 rounded-md cursor-pointer hover:bg-accent/60 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -152,14 +152,14 @@ function CreateAppDialog({ open, onClose }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 cursor-pointer rounded-lg border border-border text-sm font-medium text-foreground hover:bg-accent/60 transition-colors"
+                  className="flex-1 px-4 py-2.5 cursor-pointer rounded-lg cursor-pointer border border-border text-sm font-medium text-foreground hover:bg-accent/60 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 py-2.5 cursor-pointer rounded-lg bg-primary text-primary-foreground text-sm font-bold font-space-grotesk hover:bg-primary/80 transition-colors disabled:opacity-60"
+                  className="flex-1 px-4 py-2.5 cursor-pointer rounded-lg bg-primary cursor-pointer text-primary-foreground text-sm font-bold font-space-grotesk hover:bg-primary/80 transition-colors disabled:opacity-60"
                 >
                   {loading ? "Creating..." : "Create App"}
                 </button>
