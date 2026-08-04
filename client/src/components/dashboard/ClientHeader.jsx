@@ -21,7 +21,7 @@ import {
 
 // ── Page meta map ─────────────────────────────────────────────────────────────
 const PAGE_META = {
-  "/dashboard/overview":     { title: "Overview",      desc: "Your applications at a glance" },
+  "/dashboard/overview":     { title: "Overview",      desc: "Manage your applications" },
   "/dashboard/licenses":     { title: "Licenses",      desc: "Manage license keys for your application" },
   "/dashboard/users":        { title: "Users",         desc: "Manage users inside your application" },
   "/dashboard/subscriptions":{ title: "Subscriptions", desc: "Manage subscription tiers" },
@@ -152,14 +152,14 @@ function CreateAppDialog({ open, onClose }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-accent/60 transition-colors"
+                  className="flex-1 px-4 py-2.5 cursor-pointer rounded-lg border border-border text-sm font-medium text-foreground hover:bg-accent/60 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold font-space-grotesk hover:bg-primary/80 transition-colors disabled:opacity-60"
+                  className="flex-1 px-4 py-2.5 cursor-pointer rounded-lg bg-primary text-primary-foreground text-sm font-bold font-space-grotesk hover:bg-primary/80 transition-colors disabled:opacity-60"
                 >
                   {loading ? "Creating..." : "Create App"}
                 </button>
@@ -267,7 +267,7 @@ export default function ClientHeader({ onMobileMenuToggle }) {
 
           <button
             onClick={() => setDialogOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+            className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden sm:inline font-space-grotesk font-semibold">New App</span>

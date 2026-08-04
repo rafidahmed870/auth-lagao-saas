@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useClient } from "@/context/ClientContext";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -538,9 +537,5 @@ function OverviewContent() {
 }
 
 export default function Overview() {
-  return (
-    <DashboardLayout>
-      <OverviewContent />
-    </DashboardLayout>
-  );
+  return <OverviewContent />;
 }

@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useClient } from "@/context/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -306,11 +305,7 @@ function SubscriptionContent() {
 }
 
 export default function Subscription() {
-  return (
-    <DashboardLayout>
-      <SubscriptionContent />
-    </DashboardLayout>
-  );
+  return <SubscriptionContent />;
 }
 
 

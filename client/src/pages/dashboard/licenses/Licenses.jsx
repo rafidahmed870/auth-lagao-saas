@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useClient } from "@/context/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -510,9 +509,5 @@ function LicensesContent() {
 }
 
 export default function Licenses() {
-  return (
-    <DashboardLayout>
-      <LicensesContent />
-    </DashboardLayout>
-  );
+  return <LicensesContent />;
 }

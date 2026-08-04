@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { UsersRound, Clock, Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -96,11 +95,7 @@ function TeamContent() {
 }
 
 export default function Team() {
-  return (
-    <DashboardLayout>
-      <TeamContent />
-    </DashboardLayout>
-  );
+  return <TeamContent />;
 }
 
 

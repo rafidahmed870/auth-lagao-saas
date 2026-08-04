@@ -14,6 +14,7 @@ import Users from "@/pages/dashboard/users/Users";
 import Subscription from "@/pages/dashboard/subscriptions/Subscription";
 import Team from "@/pages/dashboard/team/Team";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import DashboardAppShell from "@/components/dashboard/DashboardAppShell";
 
 function App() {
   return (
@@ -33,47 +34,20 @@ function App() {
                 element={<Navigate to="/dashboard/overview" replace />}
               />
 
-              {/* PROTECTED ROUTES */}
+              {/* PROTECTED DASHBOARD ROUTES */}
               <Route
-                path="/dashboard/overview"
                 element={
                   <ProtectedRoute>
-                    <Overview />
+                    <DashboardAppShell />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/dashboard/licenses"
-                element={
-                  <ProtectedRoute>
-                    <Licenses />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/users"
-                element={
-                  <ProtectedRoute>
-                    <Users />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/subscriptions"
-                element={
-                  <ProtectedRoute>
-                    <Subscription />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/team"
-                element={
-                  <ProtectedRoute>
-                    <Team />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route path="/dashboard/overview" element={<Overview />} />
+                <Route path="/dashboard/licenses" element={<Licenses />} />
+                <Route path="/dashboard/users" element={<Users />} />
+                <Route path="/dashboard/subscriptions" element={<Subscription />} />
+                <Route path="/dashboard/team" element={<Team />} />
+              </Route>
 
               {/* 404 Not Found Route */}
               <Route path="*" element={<NotFound />} />

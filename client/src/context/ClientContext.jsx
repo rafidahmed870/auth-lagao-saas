@@ -9,6 +9,7 @@ export function ClientProvider({ children }) {
   const [applications, setApplications] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
   const [appsLoading, setAppsLoading] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // ── Nested resources (for selected app) ────────────────────────────────────
   const [licenses, setLicenses] = useState([]);
@@ -235,6 +236,8 @@ export function ClientProvider({ children }) {
         selectedApp,
         setSelectedApp,
         appsLoading,
+        sidebarCollapsed,
+        setSidebarCollapsed,
         licenses,
         appUsers,
         subscriptions,

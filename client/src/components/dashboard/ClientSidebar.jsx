@@ -220,8 +220,8 @@ function NavItem({ item, collapsed }) {
 
 // ── Main Sidebar ─────────────────────────────────────────────────────────────
 export default function ClientSidebar({ mobileOpen, onMobileClose }) {
-  const [collapsed, setCollapsed] = useState(false);
   const { user, logout, loading } = useAuth();
+  const { sidebarCollapsed: collapsed, setSidebarCollapsed: setCollapsed } = useClient();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -253,10 +253,21 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
           </Link>
         )}
 
-        {collapsed && !isMobile && (
-          <Link to="/" className="flex items-center justify-center">
-            <img src="/auth-lagao-web.png" alt="Auth Lagao" className="h-7 w-7 object-contain" />
-          </Link>
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed((p) => !p)}
+            className={cn(
+              "shrink-0 rounded-full cursor-pointer bg-card border border-border flex items-center justify-center hover:bg-accent transition-all duration-200 shadow-sm",
+              collapsed ? "w-7 h-7" : "w-8 h-8"
+            )}
+            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
         )}
 
         {/* Mobile close */}
@@ -279,7 +290,13 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
       <div className="mx-3 h-px bg-border my-2" />
 
       {/* ── Navigation ─────────────────────────── */}
-      <nav className={cn("flex-1 overflow-y-auto px-3 py-1 space-y-0.5", collapsed && !isMobile && "px-2")}>
+      <nav
+        className={cn(
+          "flex-1 overflow-y-auto px-3 py-1 space-y-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          collapsed && !isMobile && "px-2"
+        )}
+        style={{ msOverflowStyle: "none" }}
+      >
         {NAV_ITEMS.map((item) => (
           <NavItem
             key={item.href}
@@ -341,20 +358,7 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
         </button>
       </div>
 
-      {/* ── Collapse Toggle (desktop only) ─────── */}
-      {!isMobile && (
-        <button
-          onClick={() => setCollapsed((p) => !p)}
-          className="absolute -right-3 top-20 z-10 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center hover:bg-accent transition-all duration-200 shadow-md"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <ChevronRight className="w-3 h-3 text-muted-foreground" />
-          ) : (
-            <ChevronLeft className="w-3 h-3 text-muted-foreground" />
-          )}
-        </button>
-      )}
+
     </div>
   );
 

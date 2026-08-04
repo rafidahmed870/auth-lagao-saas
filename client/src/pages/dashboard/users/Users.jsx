@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useClient } from "@/context/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -656,9 +655,5 @@ function UsersContent() {
 }
 
 export default function Users() {
-  return (
-    <DashboardLayout>
-      <UsersContent />
-    </DashboardLayout>
-  );
+  return <UsersContent />;
 }
