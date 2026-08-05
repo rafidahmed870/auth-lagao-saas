@@ -115,7 +115,7 @@ const updateLicenseSchema = z.object({
 const createAppUserSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
+    .min(1, "Username must be at least 1 characters")
     .max(50, "Username must not exceed 50 characters"),
   password: z
     .string()
@@ -138,7 +138,7 @@ const createAppUserSchema = z.object({
 const updateAppUserSchema = z.object({
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters")
+    .min(1, "Username must be at least 1 characters")
     .max(50, "Username must not exceed 50 characters")
     .optional(),
   password: z

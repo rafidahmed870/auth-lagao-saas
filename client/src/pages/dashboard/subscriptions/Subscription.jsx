@@ -1,5 +1,7 @@
 import { useClient } from "@/context/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAppAccess } from "@/hooks/use-app-access";
+import AccessDenied from "@/components/dashboard/AccessDenied";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditCard,
@@ -25,7 +27,7 @@ const formatDate = (date) =>
     : "—";
 
 // ── Subscription card ─────────────────────────────────────────────────────────
-function SubCard({ sub, appId, onDelete, onEdit }) {
+function SubCard({ sub, appId, onDelete, onEdit, canWrite = true }) {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -75,19 +77,23 @@ function SubCard({ sub, appId, onDelete, onEdit }) {
 
         {/* Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => onEdit(sub)}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          {canWrite && (
+            <>
+              <button
+                onClick={() => onEdit(sub)}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -199,6 +205,8 @@ function SubscriptionContent() {
     deleteSubscription,
     resourceLoading,
   } = useClient();
+  const { hasPermission } = useAppAccess();
+  const canWrite = hasPermission(["app.subscription.create", "app.subscription.update", "app.subscription.delete"]);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editSub, setEditSub] = useState(null);
@@ -206,6 +214,11 @@ function SubscriptionContent() {
   useEffect(() => {
     if (selectedApp?.id) fetchSubscriptions(selectedApp.id);
   }, [selectedApp?.id, fetchSubscriptions]);
+
+  // Permission gate
+  if (selectedApp && !hasPermission("app.subscription.view")) {
+    return <AccessDenied permission="app.subscription.view" pageName="Subscriptions" />;
+  }
 
   const filtered = subscriptions.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase())
@@ -235,13 +248,15 @@ function SubscriptionContent() {
             {subscriptions.length} subscription tier{subscriptions.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button
-          onClick={() => { setEditSub(null); setModalOpen(true); }}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add Subscription
-        </button>
+        {canWrite && (
+          <button
+            onClick={() => { setEditSub(null); setModalOpen(true); }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Subscription
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -283,6 +298,7 @@ function SubscriptionContent() {
                 appId={selectedApp.id}
                 onDelete={deleteSubscription}
                 onEdit={(s) => { setEditSub(s); setModalOpen(true); }}
+                canWrite={canWrite}
               />
             ))}
           </AnimatePresence>

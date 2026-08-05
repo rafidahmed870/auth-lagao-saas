@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 const ClientContext = createContext(null);
@@ -21,6 +21,37 @@ export function ClientProvider({ children }) {
   const [teamMembers, setTeamMembers] = useState([]);
   const [permissionCatalogue, setPermissionCatalogue] = useState([]);
   const [teamLoading, setTeamLoading] = useState(false);
+
+  // ── Access control for the currently selected app ─────────────────────────
+  // "owner"  → full access (permissions array is irrelevant)
+  // "member" → access restricted to memberPermissions array
+  // null     → no app selected
+  const selectedAppAccess = useMemo(() => {
+    if (!selectedApp) return null;
+    // The app list returned by the API already carries role + permissions
+    const app = applications.find((a) => a.id === selectedApp.id);
+    if (!app) return null;
+    return {
+      role: app.role ?? "owner",           // "owner" | "member"
+      permissions: app.permissions ?? [],  // string[]
+    };
+  }, [selectedApp, applications]);
+
+  /**
+   * Returns true if the current user may perform an action on the selected app.
+   *   - owners always return true
+   *   - members return true only when the slug is in their permissions array
+   *   - pass an array to check ANY of the slugs (OR logic)
+   */
+  const hasPermission = useCallback(
+    (slugOrSlugs) => {
+      if (!selectedAppAccess) return false;
+      if (selectedAppAccess.role === "owner") return true;
+      const slugs = Array.isArray(slugOrSlugs) ? slugOrSlugs : [slugOrSlugs];
+      return slugs.some((s) => selectedAppAccess.permissions.includes(s));
+    },
+    [selectedAppAccess],
+  );
 
   // ─────────────────────────────────────────────────────────────────────────
   //  APPLICATIONS
@@ -343,6 +374,10 @@ export function ClientProvider({ children }) {
         inviteTeamMember,
         updateTeamMember,
         removeTeamMember,
+
+        // Access control
+        selectedAppAccess,
+        hasPermission,
       }}
     >
       {children}

@@ -24,12 +24,56 @@ exports.findAllApplicationsByOwner = async (ownerId) => {
   return apps;
 };
 
-exports.findApplicationById = async (appId) => {
-  const app = await db
+/**
+ * Returns every application the user can see — apps they own PLUS apps where
+ * they are a team member — each decorated with:
+ *   role        : "owner" | "member"
+ *   permissions : string[]  (empty array for owners — they have everything)
+ */
+exports.findAllApplicationsForUser = async (userId) => {
+  const { appTeamMembers } = require("../DB/schema");
+
+  /* Owned apps */
+  const ownedRaw = await db
     .select()
     .from(applications)
-    .where(eq(applications.id, appId));
-  return app[0] || null;
+    .where(eq(applications.ownerId, userId));
+
+  const owned = ownedRaw.map((app) => ({
+    ...app,
+    role: "owner",
+    permissions: [],
+  }));
+
+  /* Member apps — join membership row to get permissions */
+  const memberRaw = await db
+    .select({
+      id: applications.id,
+      ownerId: applications.ownerId,
+      appName: applications.appName,
+      appDescription: applications.appDescription,
+      appVersion: applications.appVersion,
+      isActive: applications.isActive,
+      appKey: applications.appKey,
+      encryptedPrivateKey: applications.encryptedPrivateKey,
+      privateKeyIv: applications.privateKeyIv,
+      privateKeyAuthTag: applications.privateKeyAuthTag,
+      keyVersion: applications.keyVersion,
+      createdAt: applications.createdAt,
+      updatedAt: applications.updatedAt,
+      memberPermissions: appTeamMembers.memberPermissions,
+    })
+    .from(appTeamMembers)
+    .innerJoin(applications, eq(appTeamMembers.appId, applications.id))
+    .where(eq(appTeamMembers.memberId, userId));
+
+  const member = memberRaw.map(({ memberPermissions, ...app }) => ({
+    ...app,
+    role: "member",
+    permissions: memberPermissions ?? [],
+  }));
+
+  return [...owned, ...member];
 };
 
 exports.findApplicationById = async (appId) => {

@@ -20,6 +20,7 @@ const {
 } = require("../Utils/Zod");
 const {
   findAllApplicationsByOwner,
+  findAllApplicationsForUser,
   findApplicationByOwnerAndId,
   createApplication,
   updateApplication,
@@ -104,12 +105,57 @@ const verifyAppOwnership = async (appId, userId, res, requiredPermission = null)
 
 exports.getAllApplications = TryCatch(async (req, res) => {
   const userId = req.user.id;
-  const apps = await findAllApplicationsByOwner(userId);
+
+  /* Returns owned apps + apps where the user is a team member,
+     each decorated with { role, permissions } */
+  const apps = await findAllApplicationsForUser(userId);
 
   return res.status(200).json({
     success: true,
     message: "Applications fetched successfully",
     data: apps,
+  });
+});
+
+/**
+ * GET /applications/:appId/my-access
+ *
+ * Returns the current user's role and permission array for a specific
+ * application.  Used by the client on app-switch to refresh the ACL context.
+ *
+ * Response: { role: "owner"|"member", permissions: string[] }
+ */
+exports.getMyAccess = TryCatch(async (req, res) => {
+  const userId = req.user.id;
+  const { appId } = req.params;
+
+  const paramValidation = appIdParamSchema.safeParse({ appId });
+  if (!paramValidation.success) {
+    const { firstError } = formateZodError(paramValidation.error);
+    return res.status(400).json({ success: false, message: firstError });
+  }
+
+  /* Check ownership first */
+  const owned = await findApplicationByOwnerAndId(userId, appId);
+  if (owned) {
+    return res.status(200).json({
+      success: true,
+      data: { role: "owner", permissions: [] },
+    });
+  }
+
+  /* Check team membership */
+  const membership = await findTeamMemberByUserId(userId, appId);
+  if (!membership) {
+    return res.status(403).json({ success: false, message: "Access denied" });
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      role: "member",
+      permissions: membership.memberPermissions ?? [],
+    },
   });
 });
 

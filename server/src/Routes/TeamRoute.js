@@ -21,10 +21,10 @@ const {
 
 const router = express.Router({ mergeParams: true });
 
-router.get("/members",          AuthMiddleware, getTeamMembers);
-router.post("/members",         AuthMiddleware, inviteTeamMember);
-router.patch("/members/:id",    AuthMiddleware, updateTeamMember);
-router.delete("/members/:id",   AuthMiddleware, removeTeamMember);
-router.get("/permissions",      AuthMiddleware, getPermissions);
+router.get("/members", AuthMiddleware, getTeamMembers);
+router.post("/members", AuthMiddleware, inviteTeamMember);
+router.patch("/members/:id", AuthMiddleware, updateTeamMember);
+router.delete("/members/:id", AuthMiddleware, removeTeamMember);
+router.get("/permissions", AuthMiddleware, getPermissions);
 
 module.exports = router;

@@ -1,5 +1,7 @@
 import { useClient } from "@/context/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAppAccess } from "@/hooks/use-app-access";
+import AccessDenied from "@/components/dashboard/AccessDenied";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users as UsersIcon,
@@ -36,7 +38,7 @@ const formatDate = (date) =>
     : "—";
 
 // ── HWID Lock Toggle (inline in table row) ────────────────────────────────────
-function HwidCell({ user, appId }) {
+function HwidCell({ user, appId, canWrite = true }) {
   const { updateAppUser, resetUserHwid } = useClient();
   const [toggling, setToggling] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
@@ -65,8 +67,14 @@ function HwidCell({ user, appId }) {
         {/* Lock toggle */}
         <button
           onClick={handleToggle}
-          disabled={toggling}
-          title={user.hwidLocked ? "Device lock ON — click to disable" : "Device lock OFF — click to enable"}
+          disabled={toggling || !canWrite}
+          title={
+            !canWrite
+              ? "You don't have permission to change device lock"
+              : user.hwidLocked
+              ? "Device lock ON — click to disable"
+              : "Device lock OFF — click to enable"
+          }
           className={cn(
             "cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
             user.hwidLocked
@@ -84,8 +92,8 @@ function HwidCell({ user, appId }) {
           <span className="hidden sm:inline">{user.hwidLocked ? "Locked" : "Unlocked"}</span>
         </button>
 
-        {/* Reset HWID — only shown when lock is on AND a device is bound */}
-        {user.hwidLocked && user.hwid && (
+        {/* Reset HWID — only shown when lock is on AND a device is bound AND user has write permission */}
+        {canWrite && user.hwidLocked && user.hwid && (
           <button
             onClick={(e) => { e.stopPropagation(); setResetOpen(true); }}
             title="Reset bound device (clear HWID)"
@@ -363,7 +371,7 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
 }
 
 // ── User table row ────────────────────────────────────────────────────────────
-function UserRow({ user, appId, onDelete, onEdit }) {
+function UserRow({ user, appId, onDelete, onEdit, canWrite = true }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const expired = isExpired(user.expiresAt);
@@ -424,7 +432,7 @@ function UserRow({ user, appId, onDelete, onEdit }) {
 
         {/* HWID lock — interactive inline toggle */}
         <td className="py-3 px-4 hidden md:table-cell">
-          <HwidCell user={user} appId={appId} />
+          <HwidCell user={user} appId={appId} canWrite={canWrite} />
         </td>
 
         {/* Expiry */}
@@ -444,20 +452,22 @@ function UserRow({ user, appId, onDelete, onEdit }) {
 
         {/* Row actions */}
         <td className="py-3 px-4">
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={() => onEdit(user)}
-              className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setDeleteOpen(true)}
-              className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {canWrite && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => onEdit(user)}
+                className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </td>
       </motion.tr>
 
@@ -481,6 +491,8 @@ const PAGE_SIZE = 10;
 
 function UsersContent() {
   const { selectedApp, appUsers, fetchAppUsers, deleteAppUser, resourceLoading } = useClient();
+  const { hasPermission } = useAppAccess();
+  const canWrite = hasPermission(["app.user.create", "app.user.update", "app.user.delete", "app.user.hwid.reset"]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
@@ -489,6 +501,11 @@ function UsersContent() {
   useEffect(() => {
     if (selectedApp?.id) fetchAppUsers(selectedApp.id);
   }, [selectedApp?.id, fetchAppUsers]);
+
+  // Permission gate
+  if (selectedApp && !hasPermission("app.user.view")) {
+    return <AccessDenied permission="app.user.view" pageName="Users" />;
+  }
 
   const filtered = appUsers.filter(
     (u) =>
@@ -526,13 +543,15 @@ function UsersContent() {
             {appUsers.length} user{appUsers.length !== 1 ? "s" : ""} · {activeCount} active · {expiredCount} expired
           </p>
         </div>
-        <button
-          onClick={() => { setEditUser(null); setModalOpen(true); }}
-          className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add User
-        </button>
+        {canWrite && (
+          <button
+            onClick={() => { setEditUser(null); setModalOpen(true); }}
+            className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add User
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -605,6 +624,7 @@ function UsersContent() {
                       appId={selectedApp.id}
                       onDelete={deleteAppUser}
                       onEdit={(u) => { setEditUser(u); setModalOpen(true); }}
+                      canWrite={canWrite}
                     />
                   ))}
                 </AnimatePresence>

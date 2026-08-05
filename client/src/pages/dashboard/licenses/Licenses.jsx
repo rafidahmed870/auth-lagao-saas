@@ -1,5 +1,7 @@
 import { useClient } from "@/context/ClientContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAppAccess } from "@/hooks/use-app-access";
+import AccessDenied from "@/components/dashboard/AccessDenied";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Key,
@@ -243,7 +245,7 @@ function EditLicenseDialog({ appId, license, open, onClose, onUpdated }) {
 }
 
 // ── License Row ───────────────────────────────────────────────────────────────
-function LicenseRow({ license, appId, onDelete, onEdit }) {
+function LicenseRow({ license, appId, onDelete, onEdit, canWrite = true }) {
   const [copied, setCopied] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -320,22 +322,24 @@ function LicenseRow({ license, appId, onDelete, onEdit }) {
 
         {/* Actions */}
         <td className="py-3 px-4">
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={() => onEdit(license)}
-              className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-              title="Edit expiry"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setDeleteOpen(true)}
-              className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-              title="Delete license"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {canWrite && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => onEdit(license)}
+                className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                title="Edit expiry"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                title="Delete license"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </td>
       </motion.tr>
 
@@ -359,6 +363,8 @@ const PAGE_SIZE = 10;
 
 function LicensesContent() {
   const { selectedApp, licenses, fetchLicenses, deleteLicense, resourceLoading } = useClient();
+  const { hasPermission } = useAppAccess();
+  const canWrite = hasPermission(["app.license.create", "app.license.update", "app.license.delete"]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
@@ -367,6 +373,11 @@ function LicensesContent() {
   useEffect(() => {
     if (selectedApp?.id) fetchLicenses(selectedApp.id);
   }, [selectedApp?.id, fetchLicenses]);
+
+  // Permission gate — must have at least view permission
+  if (selectedApp && !hasPermission("app.license.view")) {
+    return <AccessDenied permission="app.license.view" pageName="Licenses" />;
+  }
 
   const filtered = licenses.filter((l) =>
     l.key.toLowerCase().includes(search.toLowerCase())
@@ -398,13 +409,15 @@ function LicensesContent() {
             {licenses.length} license{licenses.length !== 1 ? "s" : ""} total
           </p>
         </div>
-        <button
-          onClick={() => setCreateOpen(true)}
-          className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add License
-        </button>
+        {canWrite && (
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add License
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -456,6 +469,7 @@ function LicensesContent() {
                       appId={selectedApp.id}
                       onDelete={deleteLicense}
                       onEdit={(l) => setEditLicense(l)}
+                      canWrite={canWrite}
                     />
                   ))}
                 </AnimatePresence>

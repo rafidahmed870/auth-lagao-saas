@@ -9,6 +9,7 @@ const { AuthMiddleware } = require("../Middlewares/AuthMiddleware");
 const {
   /* Application */
   getAllApplications,
+  getMyAccess,
   getApplicationById,
   createApplication,
   updateApplication,
@@ -50,6 +51,7 @@ const router = express.Router();
 
 router.get("/", AuthMiddleware, getAllApplications);
 router.post("/", AuthMiddleware, createApplication);
+router.get("/:appId/my-access", AuthMiddleware, getMyAccess);
 router.get("/:appId", AuthMiddleware, getApplicationById);
 router.patch("/:appId", AuthMiddleware, updateApplication);
 router.delete("/:appId", AuthMiddleware, deleteApplication);

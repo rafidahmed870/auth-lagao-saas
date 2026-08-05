@@ -1,5 +1,6 @@
 import { useClient } from "@/context/ClientContext";
 import { useAuth } from "@/context/AuthContext";
+import { useAppAccess } from "@/hooks/use-app-access";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -290,7 +291,7 @@ function StatCard({ label, value, icon: Icon, color, delay = 0 }) {
 }
 
 // ── Application card ──────────────────────────────────────────────────────────
-function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSelected }) {
+function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSelected, canManage = true }) {
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -403,8 +404,7 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
 
         {/* Action buttons */}
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-
-          {/* View */}
+          {/* View — always available */}
           <button
             onClick={handleView}
             title="View Details"
@@ -413,39 +413,39 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
             <Eye className="w-4 h-4" />
           </button>
 
-          {/* Edit */}
-          <button
-            onClick={handleEdit}
-            title="Edit"
-            className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Toggle active/inactive */}
-          <button
-            onClick={handleToggle}
-            disabled={toggling}
-            title={app.isActive ? "Stop Application" : "Enable Application"}
-            className={cn(
-              "p-1.5 rounded-md cursor-pointer transition-all duration-150 disabled:opacity-50",
-              app.isActive
-                ? "text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10"
-                : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
-            )}
-          >
-            <Power className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Delete */}
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            title="Delete Application"
-            className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 disabled:opacity-50"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          {/* Write actions — owner only */}
+          {canManage && (
+            <>
+              <button
+                onClick={handleEdit}
+                title="Edit"
+                className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handleToggle}
+                disabled={toggling}
+                title={app.isActive ? "Stop Application" : "Enable Application"}
+                className={cn(
+                  "p-1.5 rounded-md cursor-pointer transition-all duration-150 disabled:opacity-50",
+                  app.isActive
+                    ? "text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10"
+                    : "text-muted-foreground hover:text-green-400 hover:bg-green-400/10"
+                )}
+              >
+                <Power className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                title="Delete Application"
+                className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </motion.div>
@@ -503,9 +503,10 @@ function OverviewContent() {
     deleteApplication,
     updateApplication,
   } = useClient();
+  const { isOwner: isSelectedOwner } = useAppAccess();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [editApp, setEditApp] = useState(null); // app object being edited
+  const [editApp, setEditApp] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsApp, setDetailsApp] = useState(null);
 
@@ -628,8 +629,10 @@ function OverviewContent() {
                 onEdit={(a) => setEditApp(a)}
                 onView={handleViewDetails}
                 isSelected={selectedApp?.id === app.id}
+                canManage={app.role === "owner"}
               />
             ))}
+            {/* Only owners can create new applications */}
             <AddAppCard onClick={() => setCreateOpen(true)} />
           </div>
         )}

@@ -1,5 +1,7 @@
 import { useClient } from "@/context/ClientContext";
 import { useAuth } from "@/context/AuthContext";
+import { useAppAccess } from "@/hooks/use-app-access";
+import AccessDenied from "@/components/dashboard/AccessDenied";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -520,18 +522,27 @@ function TeamContent() {
     fetchTeamMembers,
     removeTeamMember,
   } = useClient();
+  const { hasPermission } = useAppAccess();
 
-  const [search, setSearch]     = useState("");
+  const [search, setSearch]         = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editMember, setEditMember] = useState(null);
 
-  // Determine if the logged-in user is the owner of the selected app
+  // Owner check (owners can always manage team)
   const isOwner = selectedApp?.ownerId === user?.id ||
     (selectedApp && applications.find((a) => a.id === selectedApp.id)?.ownerId === user?.id);
+
+  // Members need app.team.manage to invite/edit/remove
+  const canManage = isOwner || hasPermission("app.team.manage");
 
   useEffect(() => {
     if (selectedApp?.id) fetchTeamMembers(selectedApp.id);
   }, [selectedApp?.id, fetchTeamMembers]);
+
+  // Permission gate — need at least app.team.view
+  if (selectedApp && !isOwner && !hasPermission("app.team.view")) {
+    return <AccessDenied permission="app.team.view" pageName="Team" />;
+  }
 
   const filtered = teamMembers.filter(
     (m) =>
@@ -571,7 +582,7 @@ function TeamContent() {
             {teamMembers.length} member{teamMembers.length !== 1 ? "s" : ""} · manage access and permissions
           </p>
         </div>
-        {isOwner && (
+        {canManage && (
           <button
             onClick={() => setInviteOpen(true)}
             className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200 shrink-0"
@@ -634,7 +645,7 @@ function TeamContent() {
                           <p className="text-xs text-muted-foreground max-w-xs">
                             {search
                               ? "Try a different name or email."
-                              : isOwner
+                              : canManage
                               ? "Add your first collaborator using the button above."
                               : "The owner hasn't added any team members yet."}
                           </p>
@@ -647,7 +658,7 @@ function TeamContent() {
                       key={member.id}
                       member={member}
                       appId={selectedApp.id}
-                      isOwner={isOwner}
+                      isOwner={canManage}
                       onEdit={(m) => setEditMember(m)}
                       onRemove={removeTeamMember}
                     />
