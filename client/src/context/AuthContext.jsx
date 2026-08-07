@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { server } from "@/lib/api";
 
 const AuthContext = createContext(null);
 
@@ -59,20 +60,90 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setLoading(true);
     try {
-        const response = await api.post("/auth/logout");
-        if (response.data.success) {
-            setUser(null);
-            return { success: true, message: response.data.message };
-        }
+      const response = await api.post("/auth/logout");
+      if (response.data.success) {
+        setUser(null);
+        return { success: true, message: response.data.message };
+      }
     } catch (error) {
-        return { success: false, message: error.response.data.message };
+      return { success: false, message: error.response?.data?.message || "Logout failed" };
     } finally {
-        setLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const oauthRedirect = (provider) => {
+    window.location.href = `${server}/auth/${provider}`;
+  };
+
+  const googleLogin = () => oauthRedirect("google");
+  const discordLogin = () => oauthRedirect("discord");
+
+  const updateName = async (name) => {
+    try {
+      const res = await api.patch("/auth/account/name", { name });
+      if (res.data.success) {
+        setUser(res.data.user);
+        return { success: true, message: res.data.message };
+      }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to update name" };
+    }
+  };
+
+  const updateEmail = async (email, currentPassword) => {
+    try {
+      const res = await api.patch("/auth/account/email", { email, currentPassword });
+      if (res.data.success) {
+        setUser(res.data.user);
+        return { success: true, message: res.data.message };
+      }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to update email" };
+    }
+  };
+
+  const updatePassword = async (currentPassword, newPassword, confirmPassword) => {
+    try {
+      const res = await api.patch("/auth/account/password", { currentPassword, newPassword, confirmPassword });
+      if (res.data.success) {
+        // Backend clears cookies and bumps tokenVersion — log user out locally
+        setUser(null);
+        return { success: true, message: res.data.message };
+      }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to update password" };
+    }
+  };
+
+  const removeOAuth = async (provider) => {
+    try {
+      const res = await api.delete(`/auth/account/oauth/${provider}`);
+      if (res.data.success) {
+        setUser(res.data.user);
+        return { success: true, message: res.data.message };
+      }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to unlink account" };
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        register,
+        login,
+        logout,
+        googleLogin,
+        discordLogin,
+        updateName,
+        updateEmail,
+        updatePassword,
+        removeOAuth,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

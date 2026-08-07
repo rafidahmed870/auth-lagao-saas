@@ -16,12 +16,15 @@ import {
   ChevronsUpDown,
   LogOut,
   Shield,
+  Settings,
   Crown,
   X,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import GlobalSettingsDialog from "@/components/auth/GlobalSettingsDialog";
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 // requiredPermission: null = always visible; string = member must hold this slug
@@ -197,6 +200,7 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
   const { sidebarCollapsed: collapsed, setSidebarCollapsed: setCollapsed } = useClient();
   const { hasPermission } = useAppAccess();
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
     const res = await logout();
@@ -283,6 +287,16 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
               <p className="text-xs font-semibold text-foreground truncate font-space-grotesk">{user?.name}</p>
               <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
             </div>
+            {(!collapsed && !isMobile) && (
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-lg cursor-pointer text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors duration-200"
+                title="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex justify-center">
@@ -297,11 +311,31 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
           </div>
         )}
 
+        {((collapsed && !isMobile) || isMobile) && (
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-all duration-200 group",
+              collapsed && !isMobile && "justify-center px-2"
+            )}
+            title={collapsed && !isMobile ? "Settings" : undefined}
+          >
+            <Settings className="w-4 h-4 shrink-0 transition-colors" />
+            {isMobile && <span className="text-sm">Settings</span>}
+            {collapsed && !isMobile && (
+              <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-card border border-border text-xs text-foreground whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 shadow-lg z-50">
+                Settings
+              </div>
+            )}
+          </button>
+        )}
+
         <button
           onClick={handleLogout}
           disabled={loading}
           className={cn(
-            "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 group",
+            "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 group",
             collapsed && !isMobile && "justify-center px-2"
           )}
           title={collapsed && !isMobile ? "Logout" : undefined}
@@ -329,6 +363,8 @@ export default function ClientSidebar({ mobileOpen, onMobileClose }) {
       >
         {sidebarContent(false)}
       </motion.aside>
+
+      <GlobalSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* Mobile Drawer */}
       <AnimatePresence>

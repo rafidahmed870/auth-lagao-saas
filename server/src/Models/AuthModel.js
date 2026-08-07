@@ -55,3 +55,49 @@ exports.linkDiscordId = async (userId, discordId) => {
     .returning();
   return updated[0];
 };
+
+exports.updateUserName = async (userId, name) => {
+  const updated = await db
+    .update(users)
+    .set({ name })
+    .where(eq(users.id, userId))
+    .returning();
+  return updated[0];
+};
+
+exports.updateUserEmail = async (userId, email) => {
+  const updated = await db
+    .update(users)
+    .set({ email })
+    .where(eq(users.id, userId))
+    .returning();
+  return updated[0];
+};
+
+exports.updateUserPasswordAndBumpToken = async (userId, hashedPassword, currentTokenVersion) => {
+  // Bump tokenVersion to invalidate all existing sessions after password change
+  const updated = await db
+    .update(users)
+    .set({ password: hashedPassword, tokenVersion: currentTokenVersion + 1 })
+    .where(eq(users.id, userId))
+    .returning();
+  return updated[0];
+};
+
+exports.removeGoogleId = async (userId) => {
+  const updated = await db
+    .update(users)
+    .set({ googleId: null })
+    .where(eq(users.id, userId))
+    .returning();
+  return updated[0];
+};
+
+exports.removeDiscordId = async (userId) => {
+  const updated = await db
+    .update(users)
+    .set({ discordId: null })
+    .where(eq(users.id, userId))
+    .returning();
+  return updated[0];
+};

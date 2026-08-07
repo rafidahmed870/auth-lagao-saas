@@ -244,10 +244,49 @@ const updateTeamMemberPermissionsSchema = z.object({
     .min(1, "At least one permission must be assigned"),
 });
 
+/* ============================================
+   USER PROFILE UPDATE SCHEMAS
+   ============================================ */
+
+const updateNameSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Name must be at least 3 characters long")
+    .max(50, "Name must not exceed 50 characters"),
+});
+
+const updateEmailSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  currentPassword: z
+    .string()
+    .min(1, "Current password is required to change email"),
+});
+
+const updatePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(6, "New password must be at least 6 characters long")
+      .max(50, "New password must not exceed 50 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 module.exports = {
   formateZodError,
   registerSchema,
   loginSchema,
+
+  /* User profile */
+  updateNameSchema,
+  updateEmailSchema,
+  updatePasswordSchema,
 
   /* Application */
   createApplicationSchema,

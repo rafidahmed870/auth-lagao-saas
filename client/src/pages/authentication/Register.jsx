@@ -15,7 +15,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { register } = useAuth();
+  const { register, googleLogin, discordLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleRegisterBtn = async () => {
@@ -54,6 +54,7 @@ function Register() {
               variant="outline"
               className="h-10 cursor-pointer hover:bg-gray-100"
               type="button"
+              onClick={googleLogin}
             >
               <img
                 src={googleLogo}
@@ -67,6 +68,7 @@ function Register() {
               variant="outline"
               className="h-10 cursor-pointer hover:bg-gray-100"
               type="button"
+              onClick={discordLogin}
             >
               <img
                 src={discordLogo}

@@ -14,7 +14,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { login } = useAuth();
+  const { login, googleLogin, discordLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleLoginBtn = async () => {
@@ -52,6 +52,7 @@ function Login() {
               variant="outline"
               className="h-10 cursor-pointer hover:bg-gray-100"
               type="button"
+              onClick={googleLogin}
             >
               <img
                 src={googleLogo}
@@ -65,6 +66,7 @@ function Login() {
               variant="outline"
               className="h-10 cursor-pointer hover:bg-gray-100"
               type="button"
+              onClick={discordLogin}
             >
               <img
                 src={discordLogo}

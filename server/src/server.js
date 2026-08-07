@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const passport = require("./Config/passport");
 
 // Import Routes
 const authRoute = require("./Routes/AuthRoute");
@@ -21,6 +22,7 @@ app.use(
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
+app.use(passport.initialize());
 
 /* USE ROUTES */
 app.use("/api/v1/auth", authRoute);

@@ -97,9 +97,10 @@ function HwidCell({ user, appId, canWrite = true }) {
           <button
             onClick={(e) => { e.stopPropagation(); setResetOpen(true); }}
             title="Reset bound device (clear HWID)"
-            className="cursor-pointer p-1 rounded-md text-muted-foreground hover:text-orange-400 hover:bg-orange-400/10 transition-all duration-200"
+            className="cursor-pointer inline-flex items-center gap-1 rounded-full border border-orange-300/40 bg-orange-300/10 px-2 py-1 text-[11px] font-semibold text-orange-600 hover:bg-orange-300/20 transition-all duration-200"
           >
             <RotateCcw className="w-3 h-3" />
+            Reset Device
           </button>
         )}
       </div>
@@ -372,8 +373,11 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
 
 // ── User table row ────────────────────────────────────────────────────────────
 function UserRow({ user, appId, onDelete, onEdit, canWrite = true }) {
+  const { resetUserHwid } = useClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const expired = isExpired(user.expiresAt);
 
   const handleDelete = async () => {
@@ -384,6 +388,18 @@ function UserRow({ user, appId, onDelete, onEdit, canWrite = true }) {
       setDeleteOpen(false);
     } else {
       toast.error(res?.message || "Failed to delete user");
+    }
+  };
+
+  const handleReset = async () => {
+    setResetting(true);
+    const res = await resetUserHwid(appId, user.id);
+    setResetting(false);
+    if (!res?.success) {
+      toast.error(res?.message || "Failed to reset device ID");
+    } else {
+      toast.success("Device ID reset successfully");
+      setResetOpen(false);
     }
   };
 
@@ -453,16 +469,30 @@ function UserRow({ user, appId, onDelete, onEdit, canWrite = true }) {
         {/* Row actions */}
         <td className="py-3 px-4">
           {canWrite && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 transition-all">
+              {user.hwidLocked && (
+                <button
+                  onClick={() => setResetOpen(true)}
+                  className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-orange-400 hover:bg-orange-400/10 transition-all duration-200"
+                  title="Reset bound device ID"
+                  aria-label="Reset bound device ID"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 onClick={() => onEdit(user)}
                 className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                title="Edit user"
+                aria-label="Edit user"
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setDeleteOpen(true)}
                 className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                title="Delete user"
+                aria-label="Delete user"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -481,6 +511,18 @@ function UserRow({ user, appId, onDelete, onEdit, canWrite = true }) {
         variant="destructive"
         loading={deleting}
         onConfirm={handleDelete}
+      />
+
+      {/* Reset HWID confirm */}
+      <ConfirmDialog
+        open={resetOpen}
+        onOpenChange={setResetOpen}
+        title="Reset Device ID"
+        description={`This will clear the bound device ID for "${user.username}" so they can login from a new device.`}
+        confirmLabel="Reset Device ID"
+        variant="destructive"
+        loading={resetting}
+        onConfirm={handleReset}
       />
     </>
   );
