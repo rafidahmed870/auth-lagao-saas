@@ -18,4 +18,4 @@ app.listen(PORT, "0.0.0.0", async() => {
     console.log(`Application Running Under Port:${PORT}`);
 
     console.log("=========================================");
-})
+});

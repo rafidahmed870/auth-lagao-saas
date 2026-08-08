@@ -21,8 +21,11 @@ import {
   ShieldCheck,
   ShieldOff,
   RotateCcw,
+  CreditCard,
+  MoreHorizontal,
+  ChevronDown,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +40,216 @@ const formatDate = (date) =>
       })
     : "—";
 
-// ── HWID Lock Toggle (inline in table row) ────────────────────────────────────
+// ── 3-dot dropdown menu ───────────────────────────────────────────────────────
+function MoreMenu({ items }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        className={cn(
+          "cursor-pointer p-1.5 rounded-md transition-all duration-150",
+          open
+            ? "bg-accent/60 text-foreground"
+            : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+        )}
+        aria-label="More actions"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: -4 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-xl border border-border bg-card shadow-xl shadow-black/30 overflow-hidden"
+          >
+            {items.map((item, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setOpen(false); item.onClick(); }}
+                disabled={item.disabled}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+                  item.variant === "destructive"
+                    ? "text-destructive hover:bg-destructive/10"
+                    : "text-foreground hover:bg-accent/60"
+                )}
+              >
+                {item.icon && <item.icon className="w-3.5 h-3.5 shrink-0" />}
+                {item.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Subscription Picker ───────────────────────────────────────────────────────
+function SubscriptionPicker({ value, onChange, subscriptions }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const selected = subscriptions.find((s) => s.id === value) || null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm transition-all duration-200 text-left",
+          open
+            ? "border-primary bg-secondary/40 shadow-sm shadow-primary/10"
+            : "border-border bg-secondary/30 hover:border-border/80 hover:bg-secondary/40"
+        )}
+      >
+        <CreditCard className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <span className={cn("flex-1 truncate", selected ? "text-foreground" : "text-muted-foreground/60")}>
+          {selected ? selected.name : "None — no subscription"}
+        </span>
+        <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 shrink-0", open && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.13 }}
+            className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-border bg-card shadow-xl shadow-black/30 overflow-hidden"
+          >
+            {/* None option */}
+            <button
+              type="button"
+              onClick={() => { onChange(""); setOpen(false); }}
+              className={cn(
+                "w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors text-left",
+                !value
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+              )}
+            >
+              <div className={cn(
+                "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                !value ? "border-primary bg-primary" : "border-border"
+              )}>
+                {!value && <div className="w-2 h-2 rounded-full bg-white" />}
+              </div>
+              <span>None — no subscription</span>
+            </button>
+
+            {subscriptions.length > 0 && (
+              <div className="border-t border-border/50" />
+            )}
+
+            {subscriptions.map((sub) => {
+              const isSelected = value === sub.id;
+              return (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => { onChange(sub.id); setOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm transition-colors text-left",
+                    isSelected
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground hover:bg-accent/60"
+                  )}
+                >
+                  <div className={cn(
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                    isSelected ? "border-primary bg-primary" : "border-border"
+                  )}>
+                    {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+                  <span className="flex-1 truncate font-medium">{sub.name}</span>
+                </button>
+              );
+            })}
+
+            {subscriptions.length === 0 && (
+              <div className="px-3.5 py-3 text-xs text-muted-foreground text-center">
+                No subscription tiers yet
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Toggle Switch ─────────────────────────────────────────────────────────────
+function ToggleRow({ icon: Icon, title, description, value, onChange, color = "primary" }) {
+  const colors = {
+    primary: {
+      on: "bg-primary/8 border-primary/30",
+      icon: "bg-primary/15 border-primary/25 text-primary",
+      pill: "bg-primary border-primary/60",
+    },
+    blue: {
+      on: "bg-blue-500/8 border-blue-500/25",
+      icon: "bg-blue-500/15 border-blue-500/25 text-blue-400",
+      pill: "bg-blue-500 border-blue-400",
+    },
+  };
+  const c = colors[color] || colors.primary;
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all duration-200 select-none",
+        value ? c.on : "bg-secondary/20 border-border hover:bg-secondary/30"
+      )}
+      onClick={() => onChange(!value)}
+    >
+      <div className="flex items-start gap-3">
+        <div className={cn("mt-0.5 p-1.5 rounded-lg border", value ? c.icon : "bg-secondary/40 border-border text-muted-foreground")}>
+          <Icon className="w-3.5 h-3.5" />
+        </div>
+        <div>
+          <p className="text-xs font-medium font-space-grotesk text-foreground">{title}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+        </div>
+      </div>
+      <div className={cn(
+        "relative w-9 h-5 rounded-full border transition-all duration-300 shrink-0 ml-3",
+        value ? c.pill : "bg-secondary border-border"
+      )}>
+        <div className={cn(
+          "absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-all duration-300",
+          value ? "translate-x-4" : "translate-x-0.5"
+        )} />
+      </div>
+    </div>
+  );
+}
 function HwidCell({ user, appId, canWrite = true }) {
   const { updateAppUser, resetUserHwid } = useClient();
   const [toggling, setToggling] = useState(false);
@@ -122,7 +334,7 @@ function HwidCell({ user, appId, canWrite = true }) {
 
 // ── Create / Edit User Modal ──────────────────────────────────────────────────
 function UserModal({ appId, editUser, onClose, onSuccess }) {
-  const { createAppUser, updateAppUser } = useClient();
+  const { createAppUser, updateAppUser, subscriptions, fetchSubscriptions, selectedApp } = useClient();
   const isEdit = !!editUser;
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(
@@ -133,6 +345,8 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
           password: "",
           isActive: editUser.isActive,
           hwidLocked: editUser.hwidLocked ?? false,
+          isOneTimeLogin: editUser.isOneTimeLogin ?? false,
+          appSubscriptionId: editUser.appSubscriptionId || "",
           expiresAt: editUser.expiresAt
             ? new Date(editUser.expiresAt).toISOString().split("T")[0]
             : "",
@@ -142,6 +356,8 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
           email: "",
           password: "",
           hwidLocked: false,
+          isOneTimeLogin: false,
+          appSubscriptionId: "",
           expiresAt: (() => {
             const d = new Date();
             d.setFullYear(d.getFullYear() + 1);
@@ -149,6 +365,13 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
           })(),
         }
   );
+
+  // Ensure subscriptions are loaded
+  useEffect(() => {
+    if (selectedApp?.id && subscriptions.length === 0) {
+      fetchSubscriptions(selectedApp.id);
+    }
+  }, [selectedApp?.id, subscriptions.length, fetchSubscriptions]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,7 +384,9 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
       username: form.username,
       email: form.email || null,
       hwidLocked: form.hwidLocked,
+      isOneTimeLogin: form.isOneTimeLogin,
       expiresAt: new Date(form.expiresAt).toISOString(),
+      appSubscriptionId: form.appSubscriptionId || null,
       ...(form.password ? { password: form.password } : {}),
       ...(isEdit ? { isActive: form.isActive } : {}),
     };
@@ -250,6 +475,18 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
             />
           </div>
 
+          {/* Subscription */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+              Subscription Tier
+            </label>
+            <SubscriptionPicker
+              value={form.appSubscriptionId}
+              onChange={(v) => setForm((p) => ({ ...p, appSubscriptionId: v }))}
+              subscriptions={subscriptions}
+            />
+          </div>
+
           {/* Expiry + Status (edit only) */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -288,60 +525,33 @@ function UserModal({ appId, editUser, onClose, onSuccess }) {
             )}
           </div>
 
-          {/* HWID Lock toggle — full-width card */}
-          <div
-            className={cn(
-              "flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all duration-200 select-none",
-              form.hwidLocked
-                ? "bg-blue-500/8 border-blue-500/25"
-                : "bg-secondary/20 border-border hover:bg-secondary/30"
-            )}
-            onClick={() => setForm((p) => ({ ...p, hwidLocked: !p.hwidLocked }))}
-          >
-            <div className="flex items-start gap-3">
-              <div className={cn(
-                "mt-0.5 p-2 rounded-lg border",
-                form.hwidLocked
-                  ? "bg-blue-500/15 border-blue-500/25 text-blue-400"
-                  : "bg-secondary/40 border-border text-muted-foreground"
-              )}>
-                <Cpu className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium font-space-grotesk text-foreground">
-                  Device Lock (HWID)
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                  {form.hwidLocked
-                    ? "Enabled — user's login is bound to their hardware ID. First login locks the device."
-                    : "Disabled — user can log in from any device."}
-                </p>
-              </div>
-            </div>
-
-            {/* Toggle pill */}
-            <div className={cn(
-              "relative w-10 h-5.5 rounded-full border transition-all duration-300 shrink-0 ml-4",
-              form.hwidLocked ? "bg-blue-500 border-blue-400" : "bg-secondary border-border"
-            )}>
-              <div className={cn(
-                "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300",
-                form.hwidLocked ? "translate-x-5" : "translate-x-0.5"
-              )} />
-            </div>
+          {/* Toggles — Device Lock + One-Time Login */}
+          <div className="space-y-2">
+            <ToggleRow
+              icon={Cpu}
+              title="Device Lock (HWID)"
+              description={form.hwidLocked ? "Enabled — first login locks to that device's hardware ID." : "Disabled — user can log in from any device."}
+              value={form.hwidLocked}
+              onChange={(v) => setForm((p) => ({ ...p, hwidLocked: v }))}
+              color="blue"
+            />
+            <ToggleRow
+              icon={ShieldCheck}
+              title="One-Time Login"
+              description={form.isOneTimeLogin ? "Enabled — User can access only one time." : "Disabled — Users can access multiple time."}
+              value={form.isOneTimeLogin}
+              onChange={(v) => setForm((p) => ({ ...p, isOneTimeLogin: v }))}
+              color="primary"
+            />
           </div>
 
           {/* Show current HWID in edit mode */}
-          {isEdit && (
+          {isEdit && editUser.hwid && (
             <div className="flex items-start gap-2.5 p-3 rounded-lg bg-secondary/20 border border-border">
               <Cpu className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-muted-foreground mb-0.5">
-                  Bound Device ID
-                </p>
-                <code className="text-[11px] font-mono text-foreground/70 break-all">
-                  {editUser.hwid || "No device bound yet"}
-                </code>
+                <p className="text-xs font-medium text-muted-foreground mb-0.5">Bound Device ID</p>
+                <code className="text-[11px] font-mono text-foreground/70 break-all">{editUser.hwid}</code>
               </div>
             </div>
           )}
@@ -469,34 +679,11 @@ function UserRow({ user, appId, onDelete, onEdit, canWrite = true }) {
         {/* Row actions */}
         <td className="py-3 px-4">
           {canWrite && (
-            <div className="flex items-center gap-1 transition-all">
-              {user.hwidLocked && (
-                <button
-                  onClick={() => setResetOpen(true)}
-                  className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-orange-400 hover:bg-orange-400/10 transition-all duration-200"
-                  title="Reset bound device ID"
-                  aria-label="Reset bound device ID"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              )}
-              <button
-                onClick={() => onEdit(user)}
-                className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-                title="Edit user"
-                aria-label="Edit user"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setDeleteOpen(true)}
-                className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                title="Delete user"
-                aria-label="Delete user"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <MoreMenu items={[
+              { label: "Edit User",    icon: Edit2,    onClick: () => onEdit(user) },
+              ...(user.hwidLocked ? [{ label: "Reset HWID", icon: RotateCcw, onClick: () => setResetOpen(true) }] : []),
+              { label: "Delete",       icon: Trash2,   onClick: () => setDeleteOpen(true), variant: "destructive" },
+            ]} />
           )}
         </td>
       </motion.tr>
@@ -588,7 +775,7 @@ function UsersContent() {
         {canWrite && (
           <button
             onClick={() => { setEditUser(null); setModalOpen(true); }}
-            className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+            className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200 w-fit"
           >
             <Plus className="w-3.5 h-3.5" />
             Add User

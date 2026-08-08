@@ -52,6 +52,25 @@ const bcrypt = require("bcryptjs");
 const kms = new RafidKMS(process.env.APP_MASTER_KEY);
 
 /* ============================================
+   HELPERS
+   ============================================ */
+
+/**
+ * Auto-generate a license key in the format: PREFIX-XXXX-XXXX-XXXX-XXXX-SUFFIX
+ * prefix and suffix are optional — stripped if empty.
+ * Segments are random uppercase hex.
+ */
+const generateLicenseKey = (prefix, suffix) => {
+  const seg = () => Math.random().toString(16).slice(2, 6).toUpperCase();
+  const core = `${seg()}-${seg()}-${seg()}-${seg()}`;
+  const parts = [];
+  if (prefix) parts.push(prefix.toUpperCase());
+  parts.push(core);
+  if (suffix) parts.push(suffix.toUpperCase());
+  return parts.join("-");
+};
+
+/* ============================================
    HELPER: Verify app ownership or team access
    ============================================ */
 
@@ -324,10 +343,18 @@ exports.createLicense = TryCatch(async (req, res) => {
     });
   }
 
+  const { key, prefix, suffix, expiresAt, appSubscriptionId, hwidLocked, isOneTimeLogin } = validation.data;
+
+  // Use user-supplied key if provided, otherwise auto-generate
+  const licenseKey = key?.trim() || generateLicenseKey(prefix?.trim(), suffix?.trim());
+
   const newLicense = await createLicense({
-    ...validation.data,
+    key: licenseKey,
     appId,
-    expiresAt: new Date(validation.data.expiresAt),
+    expiresAt: new Date(expiresAt),
+    appSubscriptionId: appSubscriptionId ?? null,
+    hwidLocked: hwidLocked ?? false,
+    isOneTimeLogin: isOneTimeLogin ?? false,
   });
 
   return res.status(201).json({
@@ -370,6 +397,10 @@ exports.updateLicense = TryCatch(async (req, res) => {
   if (updateData.expiresAt) {
     updateData.expiresAt = new Date(updateData.expiresAt);
   }
+  // Remove generation-only fields that aren't real columns
+  delete updateData.key;
+  delete updateData.prefix;
+  delete updateData.suffix;
 
   const updated = await updateLicense(id, appId, updateData);
 
@@ -485,6 +516,7 @@ exports.createAppUser = TryCatch(async (req, res) => {
     appId,
     password: hashedPassword,
     expiresAt: new Date(validation.data.expiresAt),
+    appSubscriptionId: validation.data.appSubscriptionId ?? null,
   });
 
   /* Remove password from response */
@@ -546,6 +578,11 @@ exports.updateAppUser = TryCatch(async (req, res) => {
 
   if (updateData.expiresAt) {
     updateData.expiresAt = new Date(updateData.expiresAt);
+  }
+
+  // Allow explicitly clearing subscription (null) or setting a new one
+  if ("appSubscriptionId" in updateData) {
+    updateData.appSubscriptionId = updateData.appSubscriptionId ?? null;
   }
 
   const updated = await updateAppUser(id, appId, updateData);

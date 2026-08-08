@@ -124,6 +124,18 @@ const licenses = pgTable("licenses", {
   key: text("key").notNull().unique(),
   isUsed: boolean("is_used").notNull().default(false),   // has this key been redeemed?
   usedBy: uuid("used_by").default(null),                 // app_user id who redeemed it (no FK to avoid circular ref)
+
+  /* Subscription link */
+  appSubscriptionId: uuid("app_subscription_id")
+    .default(null)
+    .references(() => appSubscriptions.id, { onDelete: "set null" }),
+
+  /* Device lock — when true the license binds to first device that activates it */
+  hwidLocked: boolean("hwid_locked").notNull().default(false),
+
+  /* One-time login — when true the session is invalidated after each logout */
+  isOneTimeLogin: boolean("is_one_time_login").notNull().default(false),
+
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -158,6 +170,14 @@ const appUsers = pgTable("app_users", {
   /* HWID (Hardware ID) device lock */
   hwid: text("hwid").default(null), 
   hwidLocked: boolean("hwid_locked").notNull().default(false), 
+
+  /* One-time login — when true the session is invalidated after each logout */
+  isOneTimeLogin: boolean("is_one_time_login").notNull().default(false),
+
+  /* Subscription link */
+  appSubscriptionId: uuid("app_subscription_id")
+    .default(null)
+    .references(() => appSubscriptions.id, { onDelete: "set null" }),
 
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

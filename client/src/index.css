@@ -58,7 +58,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(50.16% 0.25804 264.867);
+  --primary: #2196F3;/*oklch(50.16% 0.25804 264.867);*/
   --primary-foreground: oklch(0.97 0.014 254.604);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
@@ -118,7 +118,6 @@
   font-family: inherit !important;
   font-size: 12px !important;
 }
-
 
 /* width */
 ::-webkit-scrollbar {

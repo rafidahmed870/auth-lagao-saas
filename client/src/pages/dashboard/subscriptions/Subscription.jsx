@@ -76,7 +76,7 @@ function SubCard({ sub, appId, onDelete, onEdit, canWrite = true }) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {canWrite && (
             <>
               <button
@@ -251,7 +251,7 @@ function SubscriptionContent() {
         {canWrite && (
           <button
             onClick={() => { setEditSub(null); setModalOpen(true); }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200 w-fit"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Subscription

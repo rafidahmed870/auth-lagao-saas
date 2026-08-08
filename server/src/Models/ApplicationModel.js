@@ -20,7 +20,8 @@ exports.findAllApplicationsByOwner = async (ownerId) => {
   const apps = await db
     .select()
     .from(applications)
-    .where(eq(applications.ownerId, ownerId));
+    .where(eq(applications.ownerId, ownerId))
+    .orderBy(applications.createdAt, "desc");
   return apps;
 };
 
@@ -37,7 +38,8 @@ exports.findAllApplicationsForUser = async (userId) => {
   const ownedRaw = await db
     .select()
     .from(applications)
-    .where(eq(applications.ownerId, userId));
+    .where(eq(applications.ownerId, userId))
+    .orderBy(applications.createdAt, "desc");
 
   const owned = ownedRaw.map((app) => ({
     ...app,
@@ -65,7 +67,8 @@ exports.findAllApplicationsForUser = async (userId) => {
     })
     .from(appTeamMembers)
     .innerJoin(applications, eq(appTeamMembers.appId, applications.id))
-    .where(eq(appTeamMembers.memberId, userId));
+    .where(eq(appTeamMembers.memberId, userId))
+    .orderBy(applications.createdAt, "desc");
 
   const member = memberRaw.map(({ memberPermissions, ...app }) => ({
     ...app,
@@ -73,7 +76,9 @@ exports.findAllApplicationsForUser = async (userId) => {
     permissions: memberPermissions ?? [],
   }));
 
-  return [...owned, ...member];
+  return [...owned, ...member].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 };
 
 exports.findApplicationById = async (appId) => {
@@ -136,7 +141,8 @@ exports.findAllLicensesByApp = async (appId) => {
   const result = await db
     .select()
     .from(licenses)
-    .where(eq(licenses.appId, appId));
+    .where(eq(licenses.appId, appId))
+    .orderBy(licenses.createdAt, "desc");
   return result;
 };
 
@@ -203,7 +209,8 @@ exports.findAllUsersByApp = async (appId) => {
   const result = await db
     .select()
     .from(appUsers)
-    .where(eq(appUsers.appId, appId));
+    .where(eq(appUsers.appId, appId))
+    .orderBy(appUsers.createdAt, "desc");
   return result;
 };
 
@@ -273,7 +280,8 @@ exports.findAllSubscriptionsByApp = async (appId) => {
   const result = await db
     .select()
     .from(appSubscriptions)
-    .where(eq(appSubscriptions.appId, appId));
+    .where(eq(appSubscriptions.appId, appId))
+    .orderBy(appSubscriptions.createdAt, "desc");
   return result;
 };
 

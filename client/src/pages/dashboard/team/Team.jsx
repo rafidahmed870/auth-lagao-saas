@@ -649,7 +649,7 @@ function MemberRow({ member, appId, canManage, onEdit, onRemove }) {
 
         <td className="py-3.5 px-4">
           {canManage && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <button
                 onClick={() => onEdit(member)}
                 className="cursor-pointer p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
@@ -800,7 +800,7 @@ function TeamContent() {
         {canManage && (
           <button
             onClick={() => setInviteOpen(true)}
-            className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200 shrink-0"
+            className="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/80 transition-all duration-200 shrink-0 w-fit"
           >
             <UserPlus className="w-3.5 h-3.5" />
             Add Member

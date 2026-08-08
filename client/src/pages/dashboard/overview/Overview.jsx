@@ -185,6 +185,8 @@ function AppFormDialog({ open, onClose, initialData = null }) {
 // ── Application details sheet ─────────────────────────────────────────────
 function AppDetailsSheet({ open, app, onOpenChange }) {
   const [copied, setCopied] = useState(false);
+  const { hasPermission } = useAppAccess();
+  const canViewDetails = app?.role === "owner" || hasPermission("app.view");
 
   if (!app) return null;
 
@@ -192,7 +194,6 @@ function AppDetailsSheet({ open, app, onOpenChange }) {
     try {
       await navigator.clipboard.writeText(app.appKey);
       setCopied(true);
-      //toast.success("Application key copied!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Unable to copy application key");
@@ -209,58 +210,67 @@ function AppDetailsSheet({ open, app, onOpenChange }) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-4 px-4 pb-4">
-          <div className="rounded-xl border border-border bg-card/60 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Status</span>
-              <span
-                className={cn(
-                  "rounded-full px-2.5 py-1 text-xs font-medium",
-                  app.isActive ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
-                )}
-              >
-                {app.isActive ? "Active" : "Inactive"}
-              </span>
+        {!canViewDetails ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 gap-3 text-center">
+            <div className="w-12 h-12 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-destructive" />
             </div>
-
-            <div className="mt-4 grid gap-3 text-sm">
-              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
-                <span className="text-muted-foreground">App Name</span>
-                <span className="font-medium text-foreground">{app.appName}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
-                <span className="text-muted-foreground">Version</span>
-                <span className="font-medium text-foreground">v{app.appVersion}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
-                <span className="text-muted-foreground">App ID</span>
-                <span className="font-medium text-foreground">{app.id}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card/60 p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-foreground">Application Key</p>
-              <button
-                onClick={handleCopy}
-                className="cursor-pointer text-muted-foreground hover:text-primary transition-colors"
-              >
-                {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
-              </button>
-            </div>
-            <code className="mt-2 block break-all rounded-lg bg-secondary/40 p-3 text-[11px] font-mono text-muted-foreground">
-              {app.appKey}
-            </code>
-          </div>
-
-          <div className="rounded-xl border border-border bg-primary/5 p-4">
-            <p className="text-sm font-semibold text-foreground">Secret / Private key</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              This is encrypted and stored securely on the server. It is not exposed in this view.
+            <p className="text-sm font-semibold font-space-grotesk text-foreground">Access Restricted</p>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
+              You need the <code className="px-1 py-0.5 rounded bg-secondary/40 text-primary font-mono text-[10px]">app.view</code> permission to see application details and keys.
             </p>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4 px-4 pb-4">
+            <div className="rounded-xl border border-border bg-card/60 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Status</span>
+                <span className={cn(
+                  "rounded-full px-2.5 py-1 text-xs font-medium",
+                  app.isActive ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
+                )}>
+                  {app.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div className="mt-4 grid gap-3 text-sm">
+                <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                  <span className="text-muted-foreground">App Name</span>
+                  <span className="font-medium text-foreground">{app.appName}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                  <span className="text-muted-foreground">Version</span>
+                  <span className="font-medium text-foreground">v{app.appVersion}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                  <span className="text-muted-foreground">App ID</span>
+                  <span className="font-medium text-foreground text-xs font-mono">{app.id}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card/60 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">Application Key</p>
+                <button onClick={handleCopy} className="cursor-pointer text-muted-foreground hover:text-primary transition-colors">
+                  {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+              <code className="mt-2 block break-all rounded-lg bg-secondary/40 p-3 text-[11px] font-mono text-muted-foreground">
+                {app.appKey}
+              </code>
+            </div>
+
+            {/* Secret key section — owners only */}
+            {app.role === "owner" && (
+              <div className="rounded-xl border border-border bg-primary/5 p-4">
+                <p className="text-sm font-semibold text-foreground">Secret / Private key</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  This is encrypted and stored securely on the server. It is not exposed in this view.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
@@ -300,7 +310,6 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
     e.stopPropagation();
     navigator.clipboard.writeText(app.appKey);
     setCopied(true);
-    //toast.success("App Key copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -319,20 +328,8 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
     e.stopPropagation();
     setToggling(true);
     const res = await onToggleActive(app.id, !app.isActive);
-    if (!res?.success) {
-      toast.error(res?.message || "Failed to update status");
-    }
+    if (!res?.success) toast.error(res?.message || "Failed to update status");
     setToggling(false);
-  };
-
-  const handleView = (e) => {
-    e.stopPropagation();
-    onView(app);
-  };
-
-  const handleEdit = (e) => {
-    e.stopPropagation();
-    onEdit(app);
   };
 
   return (
@@ -381,22 +378,17 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
         </code>
         <button
           onClick={handleCopy}
-          className="text-muted-foreground hover:text-primary transition-colors"
+          className="cursor-pointer text-muted-foreground hover:text-primary transition-colors"
         >
           {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
         </button>
       </div>
 
-      {/* Footer — status + actions always visible */}
+      {/* Footer — status + actions */}
       <div className="flex items-center justify-between pt-1">
         {/* Active / Inactive badge */}
         <div className="flex items-center gap-1.5">
-          <div
-            className={cn(
-              "w-1.5 h-1.5 rounded-full",
-              app.isActive ? "bg-green-400" : "bg-red-400"
-            )}
-          />
+          <div className={cn("w-1.5 h-1.5 rounded-full", app.isActive ? "bg-green-400" : "bg-red-400")} />
           <span className="text-xs text-muted-foreground">
             {app.isActive ? "Active" : "Inactive"}
           </span>
@@ -404,20 +396,17 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
 
         {/* Action buttons */}
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          {/* View — always available */}
           <button
-            onClick={handleView}
+            onClick={(e) => { e.stopPropagation(); onView(app); }}
             title="View Details"
             className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
           >
             <Eye className="w-4 h-4" />
           </button>
-
-          {/* Write actions — owner only */}
           {canManage && (
             <>
               <button
-                onClick={handleEdit}
+                onClick={(e) => { e.stopPropagation(); onEdit(app); }}
                 title="Edit"
                 className="p-1.5 rounded-md cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-150"
               >
@@ -426,7 +415,7 @@ function AppCard({ app, onSelect, onDelete, onToggleActive, onEdit, onView, isSe
               <button
                 onClick={handleToggle}
                 disabled={toggling}
-                title={app.isActive ? "Stop Application" : "Enable Application"}
+                title={app.isActive ? "Deactivate" : "Activate"}
                 className={cn(
                   "p-1.5 rounded-md cursor-pointer transition-all duration-150 disabled:opacity-50",
                   app.isActive
@@ -612,13 +601,13 @@ function OverviewContent() {
         </div>
 
         {appsLoading ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="rounded-xl border border-border bg-card/40 p-5 h-52 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {applications.map((app) => (
               <AppCard
                 key={app.id}
@@ -632,7 +621,6 @@ function OverviewContent() {
                 canManage={app.role === "owner"}
               />
             ))}
-            {/* Only owners can create new applications */}
             <AddAppCard onClick={() => setCreateOpen(true)} />
           </div>
         )}

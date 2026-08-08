@@ -85,10 +85,32 @@ const updateApplicationSchema = z.object({
    ============================================ */
 
 const createLicenseSchema = z.object({
+  // key is optional — if omitted the server auto-generates one
   key: z
     .string()
-    .min(1, "License key is required")
-    .max(500, "License key must not exceed 500 characters"),
+    .max(500, "License key must not exceed 500 characters")
+    .optional()
+    .nullable(),
+  // Optional customization hints used when auto-generating
+  prefix: z
+    .string()
+    .max(20, "Prefix must not exceed 20 characters")
+    .regex(/^[A-Za-z0-9_-]*$/, "Prefix may only contain letters, numbers, _ and -")
+    .optional()
+    .nullable(),
+  suffix: z
+    .string()
+    .max(20, "Suffix must not exceed 20 characters")
+    .regex(/^[A-Za-z0-9_-]*$/, "Suffix may only contain letters, numbers, _ and -")
+    .optional()
+    .nullable(),
+  appSubscriptionId: z
+    .string()
+    .uuid("Invalid subscription ID")
+    .optional()
+    .nullable(),
+  hwidLocked: z.boolean().optional().default(false),
+  isOneTimeLogin: z.boolean().optional().default(false),
   expiresAt: z
     .string()
     .datetime({
@@ -102,6 +124,8 @@ const updateLicenseSchema = z.object({
     .min(1, "License key is required")
     .max(500, "License key must not exceed 500 characters")
     .optional(),
+  hwidLocked: z.boolean().optional(),
+  isOneTimeLogin: z.boolean().optional(),
   expiresAt: z
     .string()
     .datetime({ message: "Invalid expiration date format (ISO 8601 required)" })
@@ -128,6 +152,12 @@ const createAppUserSchema = z.object({
     .optional()
     .nullable(),
   hwidLocked: z.boolean().optional().default(false),
+  appSubscriptionId: z
+    .string()
+    .uuid("Invalid subscription ID")
+    .optional()
+    .nullable(),
+  isOneTimeLogin: z.boolean().optional().default(false),
   expiresAt: z
     .string()
     .datetime({
@@ -154,6 +184,12 @@ const updateAppUserSchema = z.object({
     .nullable(),
   isActive: z.boolean().optional(),
   hwidLocked: z.boolean().optional(),
+  appSubscriptionId: z
+    .string()
+    .uuid("Invalid subscription ID")
+    .optional()
+    .nullable(),
+  isOneTimeLogin: z.boolean().optional(),
   expiresAt: z
     .string()
     .datetime({ message: "Invalid expiration date format (ISO 8601 required)" })

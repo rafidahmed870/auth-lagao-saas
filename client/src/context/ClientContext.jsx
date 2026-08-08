@@ -4,6 +4,10 @@ import { toast } from "react-toastify";
 
 const ClientContext = createContext(null);
 
+// Sort an array newest-first by createdAt
+const byNewest = (arr) =>
+  [...arr].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
 export function ClientProvider({ children }) {
   // ── Applications ──────────────────────────────────────────────────────────
   const [applications, setApplications] = useState([]);
@@ -61,10 +65,11 @@ export function ClientProvider({ children }) {
     setAppsLoading(true);
     try {
       const res = await api.get("/applications");
-      setApplications(res.data.data || []);
+      const sorted = byNewest(res.data.data || []);
+      setApplications(sorted);
       // Auto-select first app if none selected
-      if (!selectedApp && res.data.data?.length > 0) {
-        setSelectedApp(res.data.data[0]);
+      if (!selectedApp && sorted.length > 0) {
+        setSelectedApp(sorted[0]);
       }
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to fetch applications");
@@ -119,7 +124,7 @@ export function ClientProvider({ children }) {
     setResourceLoading(true);
     try {
       const res = await api.get(`/applications/${appId}/licenses`);
-      setLicenses(res.data.data || []);
+      setLicenses(byNewest(res.data.data || []));
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to fetch licenses");
     } finally {
@@ -160,7 +165,7 @@ export function ClientProvider({ children }) {
     setResourceLoading(true);
     try {
       const res = await api.get(`/applications/${appId}/users`);
-      setAppUsers(res.data.data || []);
+      setAppUsers(byNewest(res.data.data || []));
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to fetch users");
     } finally {
@@ -225,7 +230,7 @@ export function ClientProvider({ children }) {
     setResourceLoading(true);
     try {
       const res = await api.get(`/applications/${appId}/subscriptions`);
-      setSubscriptions(res.data.data || []);
+      setSubscriptions(byNewest(res.data.data || []));
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to fetch subscriptions");
     } finally {
