@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, ArrowRight, Lock } from "lucide-react";
+import { api } from "@/lib/api";
+import { toast } from "react-toastify";
 
 // Inline brand SVGs since lucide-react deprecated them in recent versions
 const Github = (props) => (
@@ -49,6 +51,33 @@ const Linkedin = (props) => (
 
 function Footer() {
   const currentYear = new Date().getFullYear();
+
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await api.post("/subscribe/newsletter", { email });
+      if (response.data.success) {
+        toast.success("Email subscribed successfully!");
+        setEmail("");
+      } else {
+        toast.error(
+          response.data.message || "Subscription failed. Please try again.",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Subscription failed. Please try again.",
+      );
+    } finally {
+      setEmail("");
+      setLoading(false);
+    }
+  };
 
   return (
     <footer className="bg-background border-t border-border text-foreground font-dosis">
@@ -164,7 +193,7 @@ function Footer() {
               alerts.
             </p>
             <form
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleNewsletterSubmit}
               className="flex items-center gap-2 mt-1"
             >
               <div className="relative flex-1">
@@ -174,6 +203,8 @@ function Footer() {
                   placeholder="Enter your email"
                   className="w-full bg-secondary/30 border border-border rounded-md py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <button
@@ -228,4 +259,3 @@ function Footer() {
 }
 
 export default Footer;
-

@@ -17,7 +17,7 @@ exports.subNewsletter = TryCatch(async (req, res) => {
   const {email} = validation.data;
   const { success, message, data } = await subscribeNewsletter(email);
   if (!success) {
-    return res.status(400).json({ success, message, data });
+    return res.status(400).json({ success, message });
   }
-  return res.status(200).json({ success, message, data });
+  return res.status(200).json({ success, message });
 });

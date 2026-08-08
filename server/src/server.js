@@ -8,6 +8,7 @@ const authRoute = require("./Routes/AuthRoute");
 const applicationRoute = require("./Routes/ApplicationRoute");
 const appClientRoute = require("./Routes/AppClientRoute");
 const teamRoute = require("./Routes/TeamRoute");
+const subscriptionRoute = require("./Routes/SubscriptionRoute");
 
 const app = express();
 app.use(express.json());
@@ -29,5 +30,6 @@ app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/applications", applicationRoute);
 app.use("/api/v1/applications/:appId/team", teamRoute);
 app.use("/api/v1/client", appClientRoute);
+app.use("/api/v1/subscribe", subscriptionRoute);
 
 module.exports = app;

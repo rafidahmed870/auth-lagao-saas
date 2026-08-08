@@ -35,7 +35,7 @@ exports.generateToken = async (id, tokenVersion, res) => {
       sessionId,
     },
     APP_SECRET,
-    { expiresIn: "1h" },
+    { expiresIn: "7d" },
   );
 
   await db.insert(sessions).values({
@@ -85,7 +85,7 @@ exports.verifyRefreshToken = async (refreshToken) => {
     }
     return decoded;
   } catch {
-    throw new Error("Invalid Refresh Token!");
+    return null;
   }
 };
 
