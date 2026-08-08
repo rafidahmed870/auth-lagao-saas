@@ -52,9 +52,19 @@ router.post("/logout", AuthMiddleware, verifyCSRFToken, logout);
 router.get("/account", AuthMiddleware, getMe);
 
 /* ── User Profile Update ─────────────────────────────────── */
-router.patch("/account/name",     AuthMiddleware, verifyCSRFToken, updateName);
-router.patch("/account/email",    AuthMiddleware, verifyCSRFToken, updateEmail);
-router.patch("/account/password", AuthMiddleware, verifyCSRFToken, updatePassword);
-router.delete("/account/oauth/:provider", AuthMiddleware, verifyCSRFToken, removeOAuth);
+router.patch("/account/name", AuthMiddleware, verifyCSRFToken, updateName);
+router.patch("/account/email", AuthMiddleware, verifyCSRFToken, updateEmail);
+router.patch(
+  "/account/password",
+  AuthMiddleware,
+  verifyCSRFToken,
+  updatePassword,
+);
+router.delete(
+  "/account/oauth/:provider",
+  AuthMiddleware,
+  verifyCSRFToken,
+  removeOAuth,
+);
 
 module.exports = router;

@@ -37,6 +37,7 @@ const {
   updateSubscription,
   deleteSubscription,
 } = require("../Controllers/ApplicationController");
+const { verifyCSRFToken } = require("../Config/csrfToken");
 
 const router = express.Router();
 
@@ -50,11 +51,11 @@ const router = express.Router();
    ============================================ */
 
 router.get("/", AuthMiddleware, getAllApplications);
-router.post("/", AuthMiddleware, createApplication);
+router.post("/", AuthMiddleware, verifyCSRFToken, createApplication);
 router.get("/:appId/my-access", AuthMiddleware, getMyAccess);
 router.get("/:appId", AuthMiddleware, getApplicationById);
-router.patch("/:appId", AuthMiddleware, updateApplication);
-router.delete("/:appId", AuthMiddleware, deleteApplication);
+router.patch("/:appId", AuthMiddleware, verifyCSRFToken, updateApplication);
+router.delete("/:appId", AuthMiddleware, verifyCSRFToken, deleteApplication);
 
 /* ============================================
    LICENSE ROUTES (nested under /:appId/licenses)
@@ -66,10 +67,10 @@ router.delete("/:appId", AuthMiddleware, deleteApplication);
    ============================================ */
 
 router.get("/:appId/licenses", AuthMiddleware, getAllLicenses);
-router.post("/:appId/licenses", AuthMiddleware, createLicense);
+router.post("/:appId/licenses", AuthMiddleware, verifyCSRFToken, createLicense);
 router.get("/:appId/licenses/:id", AuthMiddleware, getLicenseById);
-router.patch("/:appId/licenses/:id", AuthMiddleware, updateLicense);
-router.delete("/:appId/licenses/:id", AuthMiddleware, deleteLicense);
+router.patch("/:appId/licenses/:id", AuthMiddleware, verifyCSRFToken, updateLicense);
+router.delete("/:appId/licenses/:id", AuthMiddleware, verifyCSRFToken, deleteLicense);
 
 /* ============================================
    APP USER ROUTES (nested under /:appId/users)
@@ -81,12 +82,12 @@ router.delete("/:appId/licenses/:id", AuthMiddleware, deleteLicense);
    ============================================ */
 
 router.get("/:appId/users", AuthMiddleware, getAllAppUsers);
-router.post("/:appId/users", AuthMiddleware, createAppUser);
+router.post("/:appId/users", AuthMiddleware, verifyCSRFToken, createAppUser);
 router.get("/:appId/users/:id", AuthMiddleware, getAppUserById);
-router.patch("/:appId/users/:id", AuthMiddleware, updateAppUser);
-router.delete("/:appId/users/:id", AuthMiddleware, deleteAppUser);
+router.patch("/:appId/users/:id", AuthMiddleware, verifyCSRFToken, updateAppUser);
+router.delete("/:appId/users/:id", AuthMiddleware, verifyCSRFToken, deleteAppUser);
 /* PATCH /:appId/users/:id/reset-hwid → clear bound HWID */
-router.patch("/:appId/users/:id/reset-hwid", AuthMiddleware, resetAppUserHwid);
+router.patch("/:appId/users/:id/reset-hwid", AuthMiddleware, verifyCSRFToken, resetAppUserHwid);
 
 /* ============================================
    SUBSCRIPTION ROUTES (nested under /:appId/subscriptions)
@@ -98,9 +99,9 @@ router.patch("/:appId/users/:id/reset-hwid", AuthMiddleware, resetAppUserHwid);
    ============================================ */
 
 router.get("/:appId/subscriptions", AuthMiddleware, getAllSubscriptions);
-router.post("/:appId/subscriptions", AuthMiddleware, createSubscription);
-router.get("/:appId/subscriptions/:id", AuthMiddleware, getSubscriptionById);
-router.patch("/:appId/subscriptions/:id", AuthMiddleware, updateSubscription);
-router.delete("/:appId/subscriptions/:id", AuthMiddleware, deleteSubscription);
+router.post("/:appId/subscriptions", AuthMiddleware, verifyCSRFToken, createSubscription);
+router.get("/:appId/subscriptions/:id", AuthMiddleware, verifyCSRFToken, getSubscriptionById);
+router.patch("/:appId/subscriptions/:id", AuthMiddleware, verifyCSRFToken, updateSubscription);
+router.delete("/:appId/subscriptions/:id", AuthMiddleware, verifyCSRFToken, deleteSubscription);
 
 module.exports = router;

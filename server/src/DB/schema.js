@@ -165,7 +165,13 @@ const appUsers = pgTable("app_users", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
-})
+});
+
+const newsletterSubscriptions = pgTable("newsletter_subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 module.exports = {
   roles,
@@ -179,4 +185,5 @@ module.exports = {
   appUsers,
   appLevelPermissions,
   appTeamMembers,
+  newsletterSubscriptions,
 };

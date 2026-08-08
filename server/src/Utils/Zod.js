@@ -278,6 +278,18 @@ const updatePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+
+const newsletterSubscriptionSchema = z.object({
+  email: z.string()
+    .email("Invalid email address")
+    .refine(
+      (email) => email.endsWith('@gmail.com'),
+      {
+        message: "Only Gmail addresses are allowed"
+      }
+    )
+});
+
 module.exports = {
   formateZodError,
   registerSchema,
@@ -313,4 +325,6 @@ module.exports = {
   uuidParamSchema,
   appIdParamSchema,
   nestedParamSchema,
+
+  newsletterSubscriptionSchema,
 };

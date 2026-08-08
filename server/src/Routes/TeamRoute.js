@@ -18,13 +18,14 @@ const {
   removeTeamMember,
   getPermissions,
 } = require("../Controllers/TeamController");
+const { verifyCSRFToken } = require("../Config/csrfToken");
 
 const router = express.Router({ mergeParams: true });
 
 router.get("/members", AuthMiddleware, getTeamMembers);
-router.post("/members", AuthMiddleware, inviteTeamMember);
-router.patch("/members/:id", AuthMiddleware, updateTeamMember);
-router.delete("/members/:id", AuthMiddleware, removeTeamMember);
+router.post("/members", AuthMiddleware, verifyCSRFToken, inviteTeamMember);
+router.patch("/members/:id", AuthMiddleware, verifyCSRFToken, updateTeamMember);
+router.delete("/members/:id", AuthMiddleware, verifyCSRFToken, removeTeamMember);
 router.get("/permissions", AuthMiddleware, getPermissions);
 
 module.exports = router;
